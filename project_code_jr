@@ -1,1 +1,18 @@
+''' For petfinder: make two tables inside the database (total pets or smth) 
+thinking breed will be the integer key''' 
+import sqlite3
+import json
+import os 
 
+def set_up_database(db_name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path + "/" + db_name)
+    cur = conn.cursor()
+    return cur, conn
+
+#def create_breed_table(cur, conn):
+def main():
+    set_up_database('petfinder_pets')
+
+if __name__ == "__main__":
+    main()
