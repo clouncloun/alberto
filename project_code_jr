@@ -1,18 +1,54 @@
-''' For petfinder: make two tables inside the database (total pets or smth) 
-thinking breed will be the integer key''' 
+''' NOTE: For this code to work properly, you need to install petpy, a module for interaction with the petfinder API without using cURL
+if you already have pip installed, petpy can be installed in the terminal using the following: pip install petpy
+also install ratelimit and backoff
+thanks for reading :)''' 
+
+import petpy
+import requests
 import sqlite3
 import json
 import os 
 
+'''Get information from PetFinder API'''
+def get_petfinder_data(SECRET, KEY):
+    key = KEY
+    secret = SECRET
+    url = "https://api.petfinder.com/v2/oauth2/token"
+
+    response = requests.post(url, data={
+        "grant_type": "client_credentials",
+        "client_id": key,
+        "client_secret": secret
+    })
+    access_token = response.json()['access_token']
+    url = 'https://api.petfinder.com/v2/animals'
+    headers = { 'Authorization': f"Bearer {access_token}"}
+    try:
+        got = requests.get(url, headers=headers)
+        if got.status_code == 200:
+            animal_data = got.json()
+            print(animal_data)
+    except:
+        print('Request Failed')
+    #key = os.getenv(KEY)
+    #secret = os.getenv(SECRET)
+    #pf = petpy.Petfinder(key=key, secret=secret)
+    #print(pf)
+
+    
+''' Create the database we will use for the project'''
 def set_up_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path + "/" + db_name)
     cur = conn.cursor()
     return cur, conn
 
+
+
 #def create_breed_table(cur, conn):
 def main():
-    set_up_database('petfinder_pets')
+    get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3')
+    #set_up_database('petfinder_pets')
 
 if __name__ == "__main__":
     main()
