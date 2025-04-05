@@ -1,8 +1,3 @@
-''' NOTE: For this code to work properly, you need to install petpy, a module for interaction with the petfinder API without using cURL
-if you already have pip installed, petpy can be installed in the terminal using the following: pip install petpy
-also install ratelimit and backoff
-thanks for reading :)''' 
-
 import petpy
 import requests
 import sqlite3
@@ -23,18 +18,16 @@ def get_petfinder_data(SECRET, KEY):
     access_token = response.json()['access_token']
     url = 'https://api.petfinder.com/v2/animals'
     headers = { 'Authorization': f"Bearer {access_token}"}
-    try:
-        got = requests.get(url, headers=headers)
-        if got.status_code == 200:
-            animal_data = got.json()
-            print(animal_data)
-    except:
-        print('Request Failed')
-    #key = os.getenv(KEY)
-    #secret = os.getenv(SECRET)
-    #pf = petpy.Petfinder(key=key, secret=secret)
-    #print(pf)
-
+    #try:
+    got = requests.get(url, headers=headers)
+    print(got.status_code)
+    if got.status_code == 200:
+        animal_data = got.json()
+        print(type(animal_data))
+    #except:
+        #print('Request Failed')
+    #return animal_data
+    
     
 ''' Create the database we will use for the project'''
 def set_up_database(db_name):
@@ -47,7 +40,8 @@ def set_up_database(db_name):
 
 #def create_breed_table(cur, conn):
 def main():
-    get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3')
+    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3')
+    #print(info[0])
     #set_up_database('petfinder_pets')
 
 if __name__ == "__main__":
