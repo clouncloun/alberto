@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS catinfo (
 )
 """)
 
-
+print(catlist)
 
 for cat in catlist:
     breedname = cat['name']

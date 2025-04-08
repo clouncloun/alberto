@@ -28,29 +28,31 @@ path = os.path.dirname(os.path.abspath(__file__))
 conn = sqlite3.connect(path + "/" + "doginfo.db")
 cur = conn.cursor()
 
+
 cur.execute("""
 CREATE TABLE IF NOT EXISTS doginfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     breedname TEXT,
     temperament TEXT,
-    origin TEXT,
+    bred_for TEXT,
     life_span TEXT
 )
 """)
 
-
+#print(doglist)
 
 for dog in doglist:
     breedname = dog['name']
-    temperament = dog['temperament']
-    origin = dog['origin']
-    life_span = dog['life_span']
+    temperament = dog.get('temperament', 'Unknown')  
+    bred_for = dog.get('bred_for', 'Unknown')
+    life_span = dog.get('life_span', 'Unknown')
+
 
 
     cur.execute("""
             INSERT OR IGNORE INTO doginfo
-            (breedname, temperament, origin, lifespan)
+            (breedname, temperament, bred_for, life_span)
             VALUES (?, ?, ?, ?)
-            """, (breedname, temperament, origin, life_span))
+            """, (breedname, temperament, bred_for, life_span))
     
 conn.commit()
