@@ -1,11 +1,12 @@
-import petpy
+
 import requests
 import sqlite3
 import json
 import os 
 
 '''Get information from PetFinder API'''
-def get_petfinder_data(SECRET, KEY):
+def get_petfinder_data(SECRET, KEY, cur, conn):
+    '''Call API to get information'''
     key = KEY
     secret = SECRET
     url = "https://api.petfinder.com/v2/oauth2/token"
@@ -18,17 +19,202 @@ def get_petfinder_data(SECRET, KEY):
     access_token = response.json()['access_token']
     url = 'https://api.petfinder.com/v2/animals'
     headers = { 'Authorization': f"Bearer {access_token}"}
-    #try:
-    got = requests.get(url, headers=headers)
-    print(got.status_code)
-    if got.status_code == 200:
-        animal_data = got.json()
-        print(type(animal_data))
-    #except:
-        #print('Request Failed')
-    #return animal_data
+    params = {}
+    collected_animals = []
+    max_pages = 1
+    current_page = 1
+    while current_page <= max_pages:
+        try:
+            params['page'] = current_page
+            got = requests.get(url, headers=headers, params=params)
+            if got.status_code == 200:
+                animal_data = got.json()
+                # print(animal_data.keys())
+                # print(f"The animal data is {json.dumps(animal_data, indent = 2)}")
+                for animal in animal_data['animals']:
+                    collected_animals.append(animal)
+                # collected_animals.extend(animal_data)
+                print(f"Collected animals are {collected_animals}")
+                current_page += 1
+        except:
+            print('Request Failed')
     
+
+    '''Create the main data table with individual animal information'''
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder 
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        name TEXT, 
+        species INTEGER,
+        breed INTEGER,
+        age INTEGER,
+        gender INTEGER,
+        size INTEGER,
+        good_with_children INTEGER,
+        spayed_neutered INTEGER,
+        house_trained INTEGER,
+        state INTEGER
+        )
+    """)
+
+    '''Creat the table for the keys for species'''
+    species_list = []
+    for animal in collected_animals:
+        print(animal)
+        species = animal['species']
+        if species not in species_list:
+            species_list.append(species)
+    cur.execute("""CREATE TABLE IF NOT EXISTS species (id INTEGER PRIMARY KEY, specie TEXT)""")
+    for i in range(len(species_list)):
+        cur.execute("""INSERT OR IGNORE INTO species (id, specie) VALUES (?,?)""", (i, species_list[i]))
     
+    '''Create the table for the keys for the breeds'''
+    breeds_list = []
+    for animal in collected_animals:
+        breed = animal['breeds']['primary']
+        if breed not in breeds_list:
+            breeds_list.append(breed)
+    cur.execute("""CREATE TABLE IF NOT EXISTS breeds (id INTEGER PRIMARY KEY, breed TEXT)""")
+    for i in range(len(breeds_list)):
+        cur.execute("""INSERT OR IGNORE INTO breeds (id, breed) VALUES (?,?)""", (i, breeds_list[i]))
+    
+    '''Creat table for the keys for ages'''
+    age_list = []
+    for animal in collected_animals:
+        age = animal['age']
+        if age not in age_list:
+            age_list.append(age)
+    cur.execute("""CREATE TABLE IF NOT EXISTS ages (id INTEGER PRIMARY KEY, age TEXT)""")
+    for i in range(len(age_list)):
+        cur.execute("""INSERT OR IGNORE INTO ages (id, age) VALUES (?,?)""", (i,age_list[i]))
+
+    '''Create the table for the genders'''
+    gender_list = []
+    for animal in collected_animals:
+        gender = animal['gender']
+        if gender not in gender_list:
+            gender_list.append(gender)
+    cur.execute("""CREATE TABLE IF NOT EXISTS genders (id INTEGER PRIMARY KEY, gender TEXT)""")
+    for i in range(len(gender_list)):
+        cur.execute("""INSERT OR IGNORE INTO genders (id, gender) VALUES (?,?)""", (i, gender_list[i]))
+
+    '''Create table to tell us animal size'''
+    size_list = []
+    for animal in collected_animals:
+        size = animal['size']
+        if size not in size_list:
+            size_list.append(size)
+    cur.execute("""CREATE TABLE IF NOT EXISTS sizes (id INTEGER PRIMARY KEY, size)""")
+    for i in range(len(size_list)):
+        cur.execute("""INSERT OR IGNORE INTO sizes (id, size) VALUES (?,?)""", (i, size_list[i]))
+
+    '''Create table to tell us if the animal is good with children'''
+    child_list = []
+    for animal in collected_animals:
+        child = animal['environment']['children']
+        if child not in child_list:
+            child_list.append(child)
+    cur.execute("""CREATE TABLE IF NOT EXISTS good_with_children (id INTEGER PRIMARY KEY, child)""")
+    for i in range(len(child_list)):
+        cur.execute("""INSERT OR IGNORE INTO good_with_children (id, child) VALUES (?,?)""", (i, child_list[i]))
+
+    '''Create the table to tell us if the animal is spayed or not'''
+    spay_list = []
+    for animal in collected_animals:
+        status = animal['attributes']['spayed_neutered']
+        if status not in spay_list:
+            spay_list.append(status)
+    cur.execute("""CREATE TABLE IF NOT EXISTS spayed_neutered (id INTEGER PRIMARY KEY, status)""")
+    for i in range(len(spay_list)):
+        cur.execute("""INSERT OR IGNORE INTO spayed_neutered (id, status) VALUES (?,?)""", (i, spay_list[i]))
+    
+    '''Create a table to tell us if the animal is house trained'''
+    house_list = []
+    for animal in collected_animals:
+        house = animal['attributes']['house_trained']
+        if house not in house_list:
+            house_list.append(house)
+    cur.execute("""CREATE TABLE IF NOT EXISTS house_trained (id INTEGER PRIMARY KEY, house_trained)""")
+    for i in range(len(house_list)):
+        cur.execute("""INSERT OR IGNORE INTO house_trained (id, house_trained) VALUES (?,?)""", (i, house_list[i]))
+
+    '''Create table to save the states that the animals are from'''
+    state_list = []
+    for animal in collected_animals:
+        print(animal)
+        state = animal['contact']['address']['state']
+        if state not in state_list:
+            state_list.append(state)
+    cur.execute("""CREATE TABLE IF NOT EXISTS states (id INTEGER PRIMARY KEY, state TEXT)""")
+    for i in range(len(state_list)):
+        cur.execute("""INSERT OR IGNORE INTO states (id, state) VALUES (?,?)""", (i, state_list[i]))
+
+    '''Populate the perfinder table with the information from the API and the various tables'''
+    id_counter = 0
+    for animal in collected_animals:
+        a_id = id_counter
+        a_name = animal['name']
+        pri_spc = animal['species']
+        cur.execute("""SELECT * FROM species""")
+        a_specie = 0
+        for row in cur:
+            if row[1] == pri_spc:
+                a_specie = row[0]
+        pri_breed = animal['breeds']['primary']
+        cur.execute("""SELECT * FROM breeds""")
+        a_breed = 0
+        for row in cur:
+            if row[1] == pri_breed:
+                a_breed = row[0]
+        pri_age = animal['age']
+        cur.execute("""SELECT * FROM ages""")
+        a_age = 0
+        for row in cur:
+            if row[1] == pri_age:
+                a_age = row[0]
+        pri_gender = animal['gender']
+        cur.execute("""SELECT * FROM genders""")
+        a_gender = 0
+        for row in cur: 
+            if row[1] == pri_gender:
+                a_gender = row[0]
+        pri_size = animal['size']
+        cur.execute("""SELECT * FROM sizes""")
+        a_size = 0
+        for row in cur:
+            if row[1] == pri_size:
+                a_size = row[1]
+        pri_children = animal['environment']['children']
+        cur.execute("""SELECT * FROM good_with_children""")
+        a_child = 0
+        for row in cur:
+            if row[1] == pri_children:
+                a_child = row[0]
+        pri_spay = animal['attributes']['spayed_neutered']
+        cur.execute("""SELECT * FROM spayed_neutered""")
+        a_spay = 0
+        for row in cur:
+            if row[1] == pri_spay:
+                a_spay = row[0]
+        pri_house = animal['attributes']['house_trained']
+        cur.execute("""SELECT * FROM house_trained""")
+        a_house = 0
+        for row in cur:
+            if row[1] == pri_house:
+                a_house = row[0]
+        pri_state = animal['contact']['address']['state']
+        cur.execute("""SELECT * FROM states""")
+        a_state = 0
+        for row in cur: 
+            if row[1] == pri_state:
+                a_state = row[0]
+        cur.execute("""INSERT OR IGNORE INTO petfinder 
+                    (id, name, species, breed, age, gender, size, good_with_children, spayed_neutered, house_trained, state)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""", (a_id, a_name, a_specie, a_breed, a_age, a_gender, a_size, a_child, a_spay, a_house, a_state))
+        id_counter += 1
+    conn.commit()
+
+
+
 ''' Create the database we will use for the project'''
 def set_up_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -40,9 +226,10 @@ def set_up_database(db_name):
 
 #def create_breed_table(cur, conn):
 def main():
-    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3')
-    #print(info[0])
-    #set_up_database('petfinder_pets')
+    getters = set_up_database('petfinder_pets.db')
+    #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
+    info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
+    
 
 if __name__ == "__main__":
     main()
