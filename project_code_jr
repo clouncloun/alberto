@@ -29,12 +29,16 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
             got = requests.get(url, headers=headers, params=params)
             if got.status_code == 200:
                 animal_data = got.json()
-                collected_animals.extend(animal_data)
+                # print(animal_data.keys())
+                # print(f"The animal data is {json.dumps(animal_data, indent = 2)}")
+                for animal in animal_data['animals']:
+                    collected_animals.append(animal)
+                # collected_animals.extend(animal_data)
+                print(f"Collected animals are {collected_animals}")
                 current_page += 1
         except:
             print('Request Failed')
-    print(collected_animals)
-
+    
 
     '''Create the main data table with individual animal information'''
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder 
@@ -46,7 +50,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         gender INTEGER,
         size INTEGER,
         good_with_children INTEGER,
-        spayed_neutered INTEGER
+        spayed_neutered INTEGER,
         house_trained INTEGER,
         state INTEGER
         )
@@ -106,12 +110,12 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Create table to tell us if the animal is good with children'''
     child_list = []
     for animal in collected_animals:
-        child = animal['enviornment']['children']
+        child = animal['environment']['children']
         if child not in child_list:
             child_list.append(child)
-    cur.execute("""CREATE TABLE IF NOT EXISTS good with children (id INTEGER PRIMARY KEY, child)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS good_with_children (id INTEGER PRIMARY KEY, child)""")
     for i in range(len(child_list)):
-        cur.execute("""INSERT OR IGNORE INTO good with children (id, child) VALUES (?,?)""", (i, child_list[i]))
+        cur.execute("""INSERT OR IGNORE INTO good_with_children (id, child) VALUES (?,?)""", (i, child_list[i]))
 
     '''Create the table to tell us if the animal is spayed or not'''
     spay_list = []
@@ -119,9 +123,9 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         status = animal['attributes']['spayed_neutered']
         if status not in spay_list:
             spay_list.append(status)
-    cur.execute("""CREATE TABEL IF NOT EXISTS spayed/neutered (id INTEGER PRIMARY KEY, status)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS spayed_neutered (id INTEGER PRIMARY KEY, status)""")
     for i in range(len(spay_list)):
-        cur.execute("""INSERT OR IGNORE INTO spayed/neutered (id, status) VALUES (?,?)""", (i, spay_list[i]))
+        cur.execute("""INSERT OR IGNORE INTO spayed_neutered (id, status) VALUES (?,?)""", (i, spay_list[i]))
     
     '''Create a table to tell us if the animal is house trained'''
     house_list = []
@@ -129,19 +133,20 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         house = animal['attributes']['house_trained']
         if house not in house_list:
             house_list.append(house)
-    cur.execute("""CREATE TABLE IF NOT EXISTS house trained (id INTEGER PRIMARY KEY, house_trained)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS house_trained (id INTEGER PRIMARY KEY, house_trained)""")
     for i in range(len(house_list)):
-        cur.execute("""INSERT OR IGNORE INTO house trained (id, house_trained) VALUES (?,?)""", (i, house_list[i]))
+        cur.execute("""INSERT OR IGNORE INTO house_trained (id, house_trained) VALUES (?,?)""", (i, house_list[i]))
 
     '''Create table to save the states that the animals are from'''
     state_list = []
     for animal in collected_animals:
-        state = animal['address']['state']
+        print(animal)
+        state = animal['contact']['address']['state']
         if state not in state_list:
             state_list.append(state)
-    cur.execute("""CREATE TABLE IF NOT EXISTS states (id INTEGER PRIMARY KEY, state TEXT""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS states (id INTEGER PRIMARY KEY, state TEXT)""")
     for i in range(len(state_list)):
-        cur.excute("""INSERT OR IGNORE INTRO TABLE states (id, state) VALUES (?,?)""", (i, state_list[i]))
+        cur.execute("""INSERT OR IGNORE INTO states (id, state) VALUES (?,?)""", (i, state_list[i]))
 
     '''Populate the perfinder table with the information from the API and the various tables'''
     id_counter = 0
@@ -178,25 +183,25 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         for row in cur:
             if row[1] == pri_size:
                 a_size = row[1]
-        pri_children = animal['enviornment']['children']
-        cur.execute("""SELECT * FROM good with children""")
+        pri_children = animal['environment']['children']
+        cur.execute("""SELECT * FROM good_with_children""")
         a_child = 0
         for row in cur:
             if row[1] == pri_children:
                 a_child = row[0]
         pri_spay = animal['attributes']['spayed_neutered']
-        cur.execute("""SELECT * FROM spayed/neutered""")
+        cur.execute("""SELECT * FROM spayed_neutered""")
         a_spay = 0
         for row in cur:
             if row[1] == pri_spay:
                 a_spay = row[0]
         pri_house = animal['attributes']['house_trained']
-        cur.execute("""SELECT * FROM house trained""")
+        cur.execute("""SELECT * FROM house_trained""")
         a_house = 0
         for row in cur:
             if row[1] == pri_house:
                 a_house = row[0]
-        pri_state = animal['address']['state']
+        pri_state = animal['contact']['address']['state']
         cur.execute("""SELECT * FROM states""")
         a_state = 0
         for row in cur: 
