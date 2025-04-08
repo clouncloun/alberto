@@ -226,7 +226,7 @@ def set_up_database(db_name):
 
 #def create_breed_table(cur, conn):
 def main():
-    getters = set_up_database('petfinder_pets')
+    getters = set_up_database('petfinder_pets.db')
     #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
     
