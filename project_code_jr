@@ -20,12 +20,15 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     url = 'https://api.petfinder.com/v2/animals'
     headers = { 'Authorization': f"Bearer {access_token}"}
     params = {}
+    '''Collect animals for the database. The 25 limits to 25 per page, and the loop allows us to collect multiple pages per call'''
     collected_animals = []
-    max_pages = 1
+    max_pages = 15
     current_page = 1
+    limit = 25
     while current_page <= max_pages:
         try:
             params['page'] = current_page
+            params['limit'] = limit
             got = requests.get(url, headers=headers, params=params)
             if got.status_code == 200:
                 animal_data = got.json()
@@ -34,7 +37,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
                 for animal in animal_data['animals']:
                     collected_animals.append(animal)
                 # collected_animals.extend(animal_data)
-                print(f"Collected animals are {collected_animals}")
+                #print(f"Collected animals are {collected_animals}")
                 current_page += 1
         except:
             print('Request Failed')
@@ -59,7 +62,6 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Creat the table for the keys for species'''
     species_list = []
     for animal in collected_animals:
-        print(animal)
         species = animal['species']
         if species not in species_list:
             species_list.append(species)
@@ -140,7 +142,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Create table to save the states that the animals are from'''
     state_list = []
     for animal in collected_animals:
-        print(animal)
+        #print(animal)
         state = animal['contact']['address']['state']
         if state not in state_list:
             state_list.append(state)
@@ -182,7 +184,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         a_size = 0
         for row in cur:
             if row[1] == pri_size:
-                a_size = row[1]
+                a_size = row[0]
         pri_children = animal['environment']['children']
         cur.execute("""SELECT * FROM good_with_children""")
         a_child = 0
@@ -213,6 +215,18 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         id_counter += 1
     conn.commit()
 
+def state_w_most_pets(cur):
+    cur.execute("SELECT petfinder.state, states.id, states.state FROM petfinder JOIN states ON petfinder.state = states.id")
+    state_dict = {}
+    for item in cur:
+        state = item[2]
+        if state not in state_dict:
+            state_dict[state] = 1
+        else:
+            state_dict[state] += 1
+    sort_state = sorted(state_dict.items(), key=lambda item: item[1], reverse=True)
+    print(sort_state)
+
 
 
 ''' Create the database we will use for the project'''
@@ -226,10 +240,10 @@ def set_up_database(db_name):
 
 #def create_breed_table(cur, conn):
 def main():
-    getters = set_up_database('petfinder_pets')
+    getters = set_up_database('petfinder_pets.db')
     #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
-    info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
-    
+    #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
+    states = state_w_most_pets(getters[0])
 
 if __name__ == "__main__":
     main()
