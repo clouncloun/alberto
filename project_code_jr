@@ -22,7 +22,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     params = {}
     '''Collect animals for the database. The 25 limits to 25 per page, and the loop allows us to collect multiple pages per call'''
     collected_animals = []
-    max_pages = 15
+    max_pages = 25
     current_page = 1
     limit = 25
     while current_page <= max_pages:
@@ -239,9 +239,21 @@ def breed_most_often(cur):
         else:
             breed_dict[breed] += 1
     sort_breed = sorted(breed_dict.items(), key=lambda item: item[1], reverse=True)
-    print(sort_breed)
+    return sort_breed
 
-
+'''Create methods to see what ages are most common'''
+def age_most_common(cur):
+    cur.execute("SELECT petfinder.age, ages.id, ages.age FROM petfinder JOIN ages ON petfinder.age = ages.id")
+    age_dict = {}
+    for item in cur:
+        age = item[2]
+        if age not in age_dict:
+            age_dict[age] = 1
+        else:
+            age_dict[age] += 1
+    sort_age = sorted(age_dict.items(), key=lambda item: item[1], reverse=True)
+    return sort_age
+        
 
 ''' Create the database we will use for the project'''
 def set_up_database(db_name):
@@ -255,10 +267,11 @@ def set_up_database(db_name):
 #def create_breed_table(cur, conn):
 def main():
     getters = set_up_database('petfinder_pets.db')
-    #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
+    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
     states = state_w_most_pets(getters[0])
     breeds = breed_most_often(getters[0])
+    ages = age_most_common(getters[0])
 
 if __name__ == "__main__":
     main()
