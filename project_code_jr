@@ -215,6 +215,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         id_counter += 1
     conn.commit()
 
+'''Create dictionary to tell us where most of the animals are comming from'''
 def state_w_most_pets(cur):
     cur.execute("SELECT petfinder.state, states.id, states.state FROM petfinder JOIN states ON petfinder.state = states.id")
     state_dict = {}
@@ -225,7 +226,20 @@ def state_w_most_pets(cur):
         else:
             state_dict[state] += 1
     sort_state = sorted(state_dict.items(), key=lambda item: item[1], reverse=True)
-    print(sort_state)
+    return sort_state
+
+'''Create method to see what animals are most commonly placed up for adoption'''
+def breed_most_often(cur):
+    cur.execute("SELECT petfinder.breed, breeds.id, breeds.breed FROM petfinder JOIN breeds ON petfinder.breed = breeds.id ")
+    breed_dict = {}
+    for item in cur:
+        breed = item[2]
+        if breed not in breed_dict:
+            breed_dict[breed] = 1
+        else:
+            breed_dict[breed] += 1
+    sort_breed = sorted(breed_dict.items(), key=lambda item: item[1], reverse=True)
+    print(sort_breed)
 
 
 
@@ -244,6 +258,7 @@ def main():
     #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
     states = state_w_most_pets(getters[0])
+    breeds = breed_most_often(getters[0])
 
 if __name__ == "__main__":
     main()
