@@ -29,8 +29,6 @@ conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
 
-
-
 # id tables setup
 cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
     id INTEGER PRIMARY KEY, 
