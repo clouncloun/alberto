@@ -5,6 +5,7 @@ import json
 import sqlite3
 
 
+
 API_KEY = "live_oadwgtqrmuVZflDBSxQeLM3WNpsySPYhMtQS7sDLrFlnMtMF8fVgHCyFY6wWCPrN"
 load_dotenv()
 api_key = os.getenv("API_KEY")
@@ -27,6 +28,7 @@ else:
 path = os.path.dirname(os.path.abspath(__file__))
 conn = sqlite3.connect(path + "/" + "doginfo.db")
 cur = conn.cursor()
+
 
 
 # id tables setup
@@ -60,8 +62,8 @@ CREATE TABLE IF NOT EXISTS doginfo (
     dog_lifespan_id INTEGER,
     FOREIGN KEY (temperament1_id) REFERENCES temperament1(id),
     FOREIGN KEY (temperament2_id) REFERENCES temperament2(id),
-    FOREIGN KEY (bred_for) REFERENCES dog_bred_for(id),
-    FOREIGN KEY (lifespan) REFERENCES lifespans(id)
+    FOREIGN KEY (bred_for_id) REFERENCES bred_for(id),
+    FOREIGN KEY (dog_lifespan_id) REFERENCES lifespans(id)
 )
 """)
 
@@ -74,7 +76,7 @@ def insert_and_get_id(table, column, value):
     cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
     return cur.fetchone()[0]
 
-for cat in doglist:
+for dog in doglist:
     dog_breedname = dog['name']
     dog_temperament = dog.get('temperament', None)
     dog_temp_split = dog_temperament.split(", ")
@@ -89,5 +91,7 @@ for cat in doglist:
         temperament2 = dog_temp_split[3]
     dog_lifespan = dog['life_span']
     bred_for = dog.get('bred_for', None)
+
+
 conn.commit()
 conn.close()
