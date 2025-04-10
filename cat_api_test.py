@@ -40,12 +40,23 @@ cur.execute("""CREATE TABLE IF NOT EXISTS lifespans (
     lifespan TEXT UNIQUE
 )""")
 
+cur.execute("""CREATE TABLE IF NOT EXISTS trait1 (
+    id INTEGER PRIMARY KEY, 
+    trait1 TEXT UNIQUE
+)""")
+
+cur.execute("""CREATE TABLE IF NOT EXISTS trait2 (
+    id INTEGER PRIMARY KEY, 
+    trait2 TEXT UNIQUE
+)""")
+
 # database with individual cat info 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS catinfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    breedname INTEGER,
-    temperament TEXT,
+    breedname TEXT,
+    trait1_id INTEGER,
+    trait2_id INTEGER,
     origin_id INTEGER,
     lifespan_id INTEGER,
     shedding_level INTEGER,
@@ -53,6 +64,10 @@ CREATE TABLE IF NOT EXISTS catinfo (
     intelligence INTEGER,
     FOREIGN KEY (origin_id) REFERENCES origins(id),
     FOREIGN KEY (lifespan_id) REFERENCES lifespans(id)
+    FOREIGN KEY (trait1_id) REFERENCES trait1(id)
+    FOREIGN KEY (trait2_id) REFERENCES trait2(id)
+
+
 )
 """)
 
@@ -67,20 +82,32 @@ def insert_and_get_id(table, column, value):
 for cat in catlist:
     breedname = cat['name']
     temperament = cat.get('temperament', None)
+    temp_split = temperament.split(", ")
+    if len(temp_split) == 2:
+        trait1 = temp_split[0]
+        trait2 = temp_split[1]
+    elif len(temp_split) == 3:
+        trait1 = temp_split[1]
+        trait2 = temp_split[2]
+    elif len(temp_split) >= 4:
+        trait1 = temp_split[2]
+        trait2 = temp_split[3]
     origin = cat['origin']
     lifespan = cat['life_span']
     shedding_level = cat.get('shedding_level', None)
     health_issues = cat.get('health_issues', None)
     intelligence = cat.get('intelligence', None)
 
+    trait1_id = insert_and_get_id('trait1', 'trait1', trait1)
+    trait2_id = insert_and_get_id('trait2', 'trait2', trait2)
     origin_id = insert_and_get_id('origins', 'origin', origin)
     lifespan_id = insert_and_get_id('lifespans', 'lifespan', lifespan)
 
     cur.execute("""
         INSERT OR IGNORE INTO catinfo 
-        (breedname, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
-        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (breedname, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        (breedname, trait1_id, trait2_id, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (breedname, trait1_id, trait2_id, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
     )
 
 conn.commit()
