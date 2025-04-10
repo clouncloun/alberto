@@ -5,6 +5,8 @@ import json
 import os 
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
+import geopandas as gpd
 
 '''Get information from PetFinder API'''
 def get_petfinder_data(SECRET, KEY, cur, conn):
@@ -264,21 +266,26 @@ def set_up_database(db_name):
     cur = conn.cursor()
     return cur, conn
 
-def create_visual(plot, data):
-    for item in data:
-        print(item)
+'''Create a map visualization of pets'''
+def create_map_visualization(plt, gdp, data):
+    us_states = gdp.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    us_states = us_states[us_states['iso_a3'] == 'USA']
 
+    full_name_st = {'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+                     'FL': 'Florida', 'GA': 'Gerogia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': "Illinois", 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+                     'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+                     'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+                     'NC': 'North Carolina', 'ND': 'North Dakota'}
 
 #def create_breed_table(cur, conn):
 def main():
     getters = set_up_database('petfinder_pets.db')
-    #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
+    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
     states = state_w_most_pets(getters[0])
     breeds = breed_most_often(getters[0])
     ages = age_most_common(getters[0])
-    create_visual(plt, states)
-    
+    create_map_visualization(plt, gpd, pd, states)
 
 if __name__ == "__main__":
     main()
