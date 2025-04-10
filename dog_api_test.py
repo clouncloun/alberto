@@ -87,6 +87,7 @@ for cat in doglist:
     elif len(dog_temp_split) >= 4:
         temperament1 = dog_temp_split[2]
         temperament2 = dog_temp_split[3]
-
+    dog_lifespan = dog['life_span']
+    bred_for = dog.get('bred_for', None)
 conn.commit()
 conn.close()
