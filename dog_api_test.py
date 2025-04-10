@@ -29,17 +29,44 @@ conn = sqlite3.connect(path + "/" + "doginfo.db")
 cur = conn.cursor()
 
 
+# id tables setup
+cur.execute("""CREATE TABLE IF NOT EXISTS bred_for (
+    id INTEGER PRIMARY KEY, 
+    bred_for TEXT UNIQUE
+)""")
+
+cur.execute("""CREATE TABLE IF NOT EXISTS lifespans (
+    id INTEGER PRIMARY KEY, 
+    dog_lifespan TEXT UNIQUE
+)""")
+
+cur.execute("""CREATE TABLE IF NOT EXISTS temperament1 (
+    id INTEGER PRIMARY KEY, 
+    temperament1 TEXT UNIQUE
+)""")
+
+cur.execute("""CREATE TABLE IF NOT EXISTS temperament2 (
+    id INTEGER PRIMARY KEY, 
+    temperament2 TEXT UNIQUE
+)""")
+
 cur.execute("""
 CREATE TABLE IF NOT EXISTS doginfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    breedname TEXT,
-    temperament TEXT,
-    bred_for TEXT,
-    life_span TEXT
+    dog_breedname TEXT,
+    temperament1_id INTEGER,
+    temperament2_id INTEGER,
+    bred_for_id INTEGER,
+    dog_lifespan_id INTEGER,
+    FOREIGN KEY (temperament1_id) REFERENCES temperament1(id),
+    FOREIGN KEY (temperament2_id) REFERENCES temperament2(id),
+    FOREIGN KEY (bred_for) REFERENCES dog_bred_for(id),
+    FOREIGN KEY (lifespan) REFERENCES lifespans(id)
 )
 """)
 
 #print(doglist)
+
 
 for dog in doglist:
     breedname = dog['name']
