@@ -66,8 +66,9 @@ CREATE TABLE IF NOT EXISTS doginfo (
     FOREIGN KEY (dog_lifespan_id) REFERENCES lifespans(id)
 )
 """)
+# for dog in doglist:
+#     print(dog)
 
-#print(doglist)
 
 
 # putting data in the id tables
@@ -76,10 +77,12 @@ def insert_and_get_id(table, column, value):
     cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
     return cur.fetchone()[0]
 
+
 for dog in doglist:
     dog_breedname = dog['name']
     dog_temperament = dog.get('temperament', None)
-    dog_temp_split = dog_temperament.split(", ")
+    if dog_temperament is not None:
+        dog_temp_split = dog_temperament.split(', ')
     if len(dog_temp_split) == 2:
         temperament1 = dog_temp_split[0]
         temperament2 = dog_temp_split[1]
