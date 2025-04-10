@@ -25,47 +25,49 @@ else:
 
 # setting up database
 path = os.path.dirname(os.path.abspath(__file__))
-conn = sqlite3.connect(path + "/" + "catinfo.db")
+conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
 
+
+
 # id tables setup
-cur.execute("""CREATE TABLE IF NOT EXISTS origins (
+cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
     id INTEGER PRIMARY KEY, 
-    origin TEXT UNIQUE
+    cat_origin TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS lifespans (
+cur.execute("""CREATE TABLE IF NOT EXISTS cat_lifespans (
     id INTEGER PRIMARY KEY, 
-    lifespan TEXT UNIQUE
+    cat_lifespan TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS trait1 (
+cur.execute("""CREATE TABLE IF NOT EXISTS cat_trait1 (
     id INTEGER PRIMARY KEY, 
-    trait1 TEXT UNIQUE
+    cat_trait1 TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS trait2 (
+cur.execute("""CREATE TABLE IF NOT EXISTS cat_trait2 (
     id INTEGER PRIMARY KEY, 
-    trait2 TEXT UNIQUE
+    cat_trait2 TEXT UNIQUE
 )""")
 
 # database with individual cat info 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS catinfo (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    breedname TEXT,
-    trait1_id INTEGER,
-    trait2_id INTEGER,
-    origin_id INTEGER,
-    lifespan_id INTEGER,
-    shedding_level INTEGER,
-    health_issues INTEGER,
-    intelligence INTEGER,
-    FOREIGN KEY (origin_id) REFERENCES origins(id),
-    FOREIGN KEY (lifespan_id) REFERENCES lifespans(id)
-    FOREIGN KEY (trait1_id) REFERENCES trait1(id)
-    FOREIGN KEY (trait2_id) REFERENCES trait2(id)
+    cat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cat_breedname TEXT,
+    cat_trait1_id INTEGER,
+    cat_trait2_id INTEGER,
+    cat_origin_id INTEGER,
+    cat_lifespan_id INTEGER,
+    cat_shedding_level INTEGER,
+    cat_health_issues INTEGER,
+    cat_intelligence INTEGER,
+    FOREIGN KEY (cat_origin_id) REFERENCES cat_origins(id),
+    FOREIGN KEY (cat_lifespan_id) REFERENCES cat_lifespans(id)
+    FOREIGN KEY (cat_trait1_id) REFERENCES cat_trait1(id)
+    FOREIGN KEY (cat_trait2_id) REFERENCES cat_trait2(id)
 
 
 )
@@ -80,34 +82,34 @@ def insert_and_get_id(table, column, value):
     return cur.fetchone()[0]
 
 for cat in catlist:
-    breedname = cat['name']
-    temperament = cat.get('temperament', None)
-    temp_split = temperament.split(", ")
-    if len(temp_split) == 2:
-        trait1 = temp_split[0]
-        trait2 = temp_split[1]
-    elif len(temp_split) == 3:
-        trait1 = temp_split[1]
-        trait2 = temp_split[2]
-    elif len(temp_split) >= 4:
-        trait1 = temp_split[2]
-        trait2 = temp_split[3]
-    origin = cat['origin']
-    lifespan = cat['life_span']
-    shedding_level = cat.get('shedding_level', None)
-    health_issues = cat.get('health_issues', None)
-    intelligence = cat.get('intelligence', None)
+    cat_breedname = cat['name']
+    cat_temperament = cat.get('temperament', None)
+    cat_temp_split = cat_temperament.split(", ")
+    if len(cat_temp_split) == 2:
+        cat_trait1 = cat_temp_split[0]
+        cat_trait2 = cat_temp_split[1]
+    elif len(cat_temp_split) == 3:
+        cat_trait1 = cat_temp_split[1]
+        cat_trait2 = cat_temp_split[2]
+    elif len(cat_temp_split) >= 4:
+        cat_trait1 = cat_temp_split[2]
+        cat_trait2 = cat_temp_split[3]
+    cat_origin = cat['origin']
+    cat_lifespan = cat['life_span']
+    cat_shedding_level = cat.get('shedding_level', None)
+    cat_health_issues = cat.get('health_issues', None)
+    cat_intelligence = cat.get('intelligence', None)
 
-    trait1_id = insert_and_get_id('trait1', 'trait1', trait1)
-    trait2_id = insert_and_get_id('trait2', 'trait2', trait2)
-    origin_id = insert_and_get_id('origins', 'origin', origin)
-    lifespan_id = insert_and_get_id('lifespans', 'lifespan', lifespan)
+    cat_trait1_id = insert_and_get_id('cat_trait1', 'cat_trait1', cat_trait1)
+    cat_trait2_id = insert_and_get_id('cat_trait2', 'cat_trait2', cat_trait2)
+    cat_origin_id = insert_and_get_id('cat_origins', 'cat_origin', cat_origin)
+    cat_lifespan_id = insert_and_get_id('cat_lifespans', 'cat_lifespan', cat_lifespan)
 
     cur.execute("""
         INSERT OR IGNORE INTO catinfo 
-        (breedname, trait1_id, trait2_id, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        (cat_breedname, cat_trait1_id, cat_trait2_id, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (breedname, trait1_id, trait2_id, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        (cat_breedname, cat_trait1_id, cat_trait2_id, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
     )
 
 conn.commit()
