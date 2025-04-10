@@ -3,6 +3,8 @@ import requests
 import sqlite3
 import json
 import os 
+import matplotlib
+import matplotlib.pyplot as plt
 
 '''Get information from PetFinder API'''
 def get_petfinder_data(SECRET, KEY, cur, conn):
@@ -42,7 +44,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         except:
             print('Request Failed')
     
-
+    
     '''Create the main data table with individual animal information'''
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -58,7 +60,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         state INTEGER
         )
     """)
-
+    
     '''Creat the table for the keys for species'''
     species_list = []
     for animal in collected_animals:
@@ -262,16 +264,21 @@ def set_up_database(db_name):
     cur = conn.cursor()
     return cur, conn
 
+def create_visual(plot, data):
+    for item in data:
+        print(item)
 
 
 #def create_breed_table(cur, conn):
 def main():
     getters = set_up_database('petfinder_pets.db')
-    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
+    #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
     states = state_w_most_pets(getters[0])
     breeds = breed_most_often(getters[0])
     ages = age_most_common(getters[0])
+    create_visual(plt, states)
+    
 
 if __name__ == "__main__":
     main()
