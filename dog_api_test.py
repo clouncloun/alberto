@@ -47,8 +47,6 @@ for dog in doglist:
     bred_for = dog.get('bred_for', 'Unknown')
     life_span = dog.get('life_span', 'Unknown')
 
-
-
     cur.execute("""
             INSERT OR IGNORE INTO doginfo
             (breedname, temperament, bred_for, life_span)
