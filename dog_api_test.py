@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS doginfo (
 def insert_and_get_id(table, column, value):
     cur.execute(f"INSERT OR IGNORE INTO {table} ({column}) VALUES (?)", (value,))
     cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
-    return cur.fetchone()[0]
+    result = cur.fetchone()
+    return result[0] if result else None
 
 
 for dog in doglist:
@@ -94,6 +95,18 @@ for dog in doglist:
         temperament2 = dog_temp_split[3]
     dog_lifespan = dog['life_span']
     bred_for = dog.get('bred_for', None)
+
+    temperament1_id = insert_and_get_id('temperament1', 'temperament1', temperament1)
+    temperament2_id = insert_and_get_id('temperament2', 'temperament2', temperament2)
+    dog_lifespan_id = insert_and_get_id('lifespans', 'dog_lifespan', dog_lifespan)
+    bred_for_id = insert_and_get_id('bred_for', 'bred_for', bred_for)
+
+    cur.execute("""
+        INSERT OR IGNORE INTO doginfo 
+        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+        VALUES (?, ?, ?, ?, ?)""",
+        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+    )
 
 
 conn.commit()
