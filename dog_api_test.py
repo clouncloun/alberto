@@ -68,16 +68,25 @@ CREATE TABLE IF NOT EXISTS doginfo (
 #print(doglist)
 
 
-for dog in doglist:
-    breedname = dog['name']
-    temperament = dog.get('temperament', 'Unknown')  
-    bred_for = dog.get('bred_for', 'Unknown')
-    life_span = dog.get('life_span', 'Unknown')
+# putting data in the id tables
+def insert_and_get_id(table, column, value):
+    cur.execute(f"INSERT OR IGNORE INTO {table} ({column}) VALUES (?)", (value,))
+    cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
+    return cur.fetchone()[0]
 
-    cur.execute("""
-            INSERT OR IGNORE INTO doginfo
-            (breedname, temperament, bred_for, life_span)
-            VALUES (?, ?, ?, ?)
-            """, (breedname, temperament, bred_for, life_span))
-    
+for cat in doglist:
+    dog_breedname = dog['name']
+    dog_temperament = dog.get('temperament', None)
+    dog_temp_split = dog_temperament.split(", ")
+    if len(dog_temp_split) == 2:
+        temperament1 = dog_temp_split[0]
+        temperament2 = dog_temp_split[1]
+    elif len(dog_temp_split) == 3:
+        temperament1 = dog_temp_split[1]
+        temperament2 = dog_temp_split[2]
+    elif len(dog_temp_split) >= 4:
+        temperament1 = dog_temp_split[2]
+        temperament2 = dog_temp_split[3]
+
 conn.commit()
+conn.close()
