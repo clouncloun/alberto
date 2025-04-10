@@ -30,11 +30,6 @@ cur = conn.cursor()
 
 
 # id tables setup
-cur.execute("""CREATE TABLE IF NOT EXISTS breeds (
-    id INTEGER PRIMARY KEY, 
-    breed TEXT UNIQUE
-)""")
-
 cur.execute("""CREATE TABLE IF NOT EXISTS origins (
     id INTEGER PRIMARY KEY, 
     origin TEXT UNIQUE
@@ -49,14 +44,13 @@ cur.execute("""CREATE TABLE IF NOT EXISTS lifespans (
 cur.execute("""
 CREATE TABLE IF NOT EXISTS catinfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    breed_id INTEGER,
+    breedname INTEGER,
     temperament TEXT,
     origin_id INTEGER,
     lifespan_id INTEGER,
     shedding_level INTEGER,
     health_issues INTEGER,
     intelligence INTEGER,
-    FOREIGN KEY (breed_id) REFERENCES breeds(id),
     FOREIGN KEY (origin_id) REFERENCES origins(id),
     FOREIGN KEY (lifespan_id) REFERENCES lifespans(id)
 )
@@ -79,15 +73,14 @@ for cat in catlist:
     health_issues = cat.get('health_issues', None)
     intelligence = cat.get('intelligence', None)
 
-    breed_id = insert_and_get_id('breeds', 'breed', breedname)
     origin_id = insert_and_get_id('origins', 'origin', origin)
     lifespan_id = insert_and_get_id('lifespans', 'lifespan', lifespan)
 
     cur.execute("""
         INSERT OR IGNORE INTO catinfo 
-        (breed_id, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        (breedname, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
         VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (breed_id, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
+        (breedname, temperament, origin_id, lifespan_id, shedding_level, health_issues, intelligence)
     )
 
 conn.commit()
