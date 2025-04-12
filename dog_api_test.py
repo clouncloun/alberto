@@ -56,10 +56,10 @@ cur.execute("""
 CREATE TABLE IF NOT EXISTS doginfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     dog_breedname TEXT,
-    temperament1_id INTEGER,
-    temperament2_id INTEGER,
-    bred_for_id INTEGER,
-    dog_lifespan_id INTEGER,
+    temperament1_id INTEGER DEFAULT 0,
+    temperament2_id INTEGER DEFAULT 0,
+    bred_for_id INTEGER DEFAULT 0,
+    dog_lifespan_id INTEGER DEFAULT 0,
     FOREIGN KEY (temperament1_id) REFERENCES temperament1(id),
     FOREIGN KEY (temperament2_id) REFERENCES temperament2(id),
     FOREIGN KEY (bred_for_id) REFERENCES bred_for(id),
@@ -69,14 +69,15 @@ CREATE TABLE IF NOT EXISTS doginfo (
 # for dog in doglist:
 #     print(dog)
 
-
-
 # putting data in the id tables
+# and ensure None values are replaced with 0 before inserting into the database
 def insert_and_get_id(table, column, value):
+    if value is None:
+        return 0
     cur.execute(f"INSERT OR IGNORE INTO {table} ({column}) VALUES (?)", (value,))
     cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
-    return cur.fetchone()[0]
-
+    result = cur.fetchone()
+    return result[0] if result else 0
 
 for dog in doglist:
     dog_breedname = dog['name']
@@ -94,6 +95,18 @@ for dog in doglist:
         temperament2 = dog_temp_split[3]
     dog_lifespan = dog['life_span']
     bred_for = dog.get('bred_for', None)
+
+    temperament1_id = insert_and_get_id('temperament1', 'temperament1', temperament1)
+    temperament2_id = insert_and_get_id('temperament2', 'temperament2', temperament2)
+    dog_lifespan_id = insert_and_get_id('lifespans', 'dog_lifespan', dog_lifespan)
+    bred_for_id = insert_and_get_id('bred_for', 'bred_for', bred_for)
+
+    cur.execute("""
+        INSERT OR IGNORE INTO doginfo 
+        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+        VALUES (?, ?, ?, ?, ?)""",
+        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+    )
 
 
 conn.commit()
