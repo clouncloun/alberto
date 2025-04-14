@@ -26,44 +26,45 @@ else:
 
 # setting up database
 path = os.path.dirname(os.path.abspath(__file__))
-conn = sqlite3.connect(path + "/" + "doginfo.db")
+conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
 
+#cur.execute("""DROP TABLE doglist""")
 
 # id tables setup
-cur.execute("""CREATE TABLE IF NOT EXISTS bred_for (
+cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
     id INTEGER PRIMARY KEY, 
-    bred_for TEXT UNIQUE
+    dog_bred_for TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS lifespans (
+cur.execute("""CREATE TABLE IF NOT EXISTS dog_lifespans (
     id INTEGER PRIMARY KEY, 
     dog_lifespan TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS temperament1 (
+cur.execute("""CREATE TABLE IF NOT EXISTS dog_temperament1 (
     id INTEGER PRIMARY KEY, 
-    temperament1 TEXT UNIQUE
+    dog_temperament1 TEXT UNIQUE
 )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS temperament2 (
+cur.execute("""CREATE TABLE IF NOT EXISTS dog_temperament2 (
     id INTEGER PRIMARY KEY, 
-    temperament2 TEXT UNIQUE
+    dog_temperament2 TEXT UNIQUE
 )""")
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS doginfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     dog_breedname TEXT,
-    temperament1_id INTEGER DEFAULT 0,
-    temperament2_id INTEGER DEFAULT 0,
-    bred_for_id INTEGER DEFAULT 0,
+    dog_temperament1_id INTEGER DEFAULT 0,
+    dog_temperament2_id INTEGER DEFAULT 0,
+    dog_bred_for_id INTEGER DEFAULT 0,
     dog_lifespan_id INTEGER DEFAULT 0,
-    FOREIGN KEY (temperament1_id) REFERENCES temperament1(id),
-    FOREIGN KEY (temperament2_id) REFERENCES temperament2(id),
-    FOREIGN KEY (bred_for_id) REFERENCES bred_for(id),
-    FOREIGN KEY (dog_lifespan_id) REFERENCES lifespans(id)
+    FOREIGN KEY (dog_temperament1_id) REFERENCES dog_temperament1(id),
+    FOREIGN KEY (dog_temperament2_id) REFERENCES dog_temperament2(id),
+    FOREIGN KEY (dog_bred_for_id) REFERENCES dog_bred_for(id),
+    FOREIGN KEY (dog_lifespan_id) REFERENCES dog_lifespans(id)
 )
 """)
 # for dog in doglist:
@@ -81,31 +82,32 @@ def insert_and_get_id(table, column, value):
 
 for dog in doglist:
     dog_breedname = dog['name']
-    dog_temperament = dog.get('temperament', None)
+    dog_temperament = dog.get('dog_temperament', None)
+    print(dog_temperament)
     if dog_temperament is not None:
         dog_temp_split = dog_temperament.split(', ')
     if len(dog_temp_split) == 2:
-        temperament1 = dog_temp_split[0]
-        temperament2 = dog_temp_split[1]
+        dog_temperament1 = dog_temp_split[0]
+        dog_temperament2 = dog_temp_split[1]
     elif len(dog_temp_split) == 3:
-        temperament1 = dog_temp_split[1]
-        temperament2 = dog_temp_split[2]
+        dog_temperament1 = dog_temp_split[1]
+        dog_temperament2 = dog_temp_split[2]
     elif len(dog_temp_split) >= 4:
-        temperament1 = dog_temp_split[2]
-        temperament2 = dog_temp_split[3]
+        dog_temperament1 = dog_temp_split[2]
+        dog_temperament2 = dog_temp_split[3]
     dog_lifespan = dog['life_span']
-    bred_for = dog.get('bred_for', None)
+    dog_bred_for = dog.get('dog_bred_for', None)
 
-    temperament1_id = insert_and_get_id('temperament1', 'temperament1', temperament1)
-    temperament2_id = insert_and_get_id('temperament2', 'temperament2', temperament2)
-    dog_lifespan_id = insert_and_get_id('lifespans', 'dog_lifespan', dog_lifespan)
-    bred_for_id = insert_and_get_id('bred_for', 'bred_for', bred_for)
+    dog_temperament1_id = insert_and_get_id('dog_temperament1', 'dog_temperament1', dog_temperament1)
+    dog_temperament2_id = insert_and_get_id('dog_temperament2', 'dog_temperament2', dog_temperament2)
+    dog_lifespan_id = insert_and_get_id('dog_lifespans', 'dog_lifespan', dog_lifespan)
+    dog_bred_for_id = insert_and_get_id('dog_bred_for', 'dog_bred_for', dog_bred_for)
 
     cur.execute("""
         INSERT OR IGNORE INTO doginfo 
-        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+        (dog_breedname, dog_temperament1_id, dog_temperament2_id, dog_lifespan_id, dog_bred_for_id)
         VALUES (?, ?, ?, ?, ?)""",
-        (dog_breedname, temperament1_id, temperament2_id, dog_lifespan_id, bred_for_id)
+        (dog_breedname, dog_temperament1_id, dog_temperament2_id, dog_lifespan_id, dog_bred_for_id)
     )
 
 

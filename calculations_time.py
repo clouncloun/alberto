@@ -9,6 +9,16 @@ def get_data_from_table_as_dict(table_name):
     return [dict(row) for row in rows]
 
 
-data = get_data_from_table_as_dict("catinfo")
-for row in data:
-    print(row)
+petswithbreeddata = []
+
+catbreeddata = get_data_from_table_as_dict("catinfo")
+for cat in catbreeddata:
+    catbreed = (cat["cat_breedname"])
+    allbreeddata = get_data_from_table_as_dict("breeds")
+    for creature in allbreeddata:
+        creaturebreed = (creature['breed'])
+        if catbreed == creaturebreed:
+            petswithbreeddata.append(creature)
+
+
+print(petswithbreeddata)
