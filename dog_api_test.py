@@ -30,7 +30,7 @@ conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
 
-#cur.execute("""DROP TABLE doglist""")
+#cur.execute("""DROP TABLE lifespans""")
 
 # id tables setup
 cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
@@ -82,19 +82,24 @@ def insert_and_get_id(table, column, value):
 
 for dog in doglist:
     dog_breedname = dog['name']
-    dog_temperament = dog.get('dog_temperament', None)
-    print(dog_temperament)
+    dog_temperament = dog.get('temperament', None)
+    #print(dog_temperament)
+
+    dog_temperament1 = None
+    dog_temperament2 = None
+
     if dog_temperament is not None:
         dog_temp_split = dog_temperament.split(', ')
-    if len(dog_temp_split) == 2:
-        dog_temperament1 = dog_temp_split[0]
-        dog_temperament2 = dog_temp_split[1]
-    elif len(dog_temp_split) == 3:
-        dog_temperament1 = dog_temp_split[1]
-        dog_temperament2 = dog_temp_split[2]
-    elif len(dog_temp_split) >= 4:
-        dog_temperament1 = dog_temp_split[2]
-        dog_temperament2 = dog_temp_split[3]
+        if len(dog_temp_split) == 2:
+            dog_temperament1 = dog_temp_split[0]
+            dog_temperament2 = dog_temp_split[1]
+        elif len(dog_temp_split) == 3:
+            dog_temperament1 = dog_temp_split[1]
+            dog_temperament2 = dog_temp_split[2]
+        elif len(dog_temp_split) >= 4:
+            dog_temperament1 = dog_temp_split[2]
+            dog_temperament2 = dog_temp_split[3]
+
     dog_lifespan = dog['life_span']
     dog_bred_for = dog.get('dog_bred_for', None)
 
