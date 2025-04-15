@@ -38,6 +38,11 @@ cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
     dog_bred_for TEXT UNIQUE
 )""")
 
+cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
+    id INTEGER PRIMARY KEY, 
+    dog_breed_group TEXT UNIQUE
+)""")
+
 cur.execute("""CREATE TABLE IF NOT EXISTS dog_lifespans (
     id INTEGER PRIMARY KEY, 
     dog_lifespan TEXT UNIQUE
@@ -60,10 +65,12 @@ CREATE TABLE IF NOT EXISTS doginfo (
     dog_temperament1_id INTEGER DEFAULT 0,
     dog_temperament2_id INTEGER DEFAULT 0,
     dog_bred_for_id INTEGER DEFAULT 0,
+    dog_breed_group_id INTEGER DEFAULT 0,
     dog_lifespan_id INTEGER DEFAULT 0,
     FOREIGN KEY (dog_temperament1_id) REFERENCES dog_temperament1(id),
     FOREIGN KEY (dog_temperament2_id) REFERENCES dog_temperament2(id),
     FOREIGN KEY (dog_bred_for_id) REFERENCES dog_bred_for(id),
+    FOREIGN KEY (dog_breed_group_id) REFERENCES dog_breed_group(id)
     FOREIGN KEY (dog_lifespan_id) REFERENCES dog_lifespans(id)
 )
 """)
