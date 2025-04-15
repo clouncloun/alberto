@@ -30,7 +30,7 @@ conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
 
-#cur.execute("""DROP TABLE lifespans""")
+#cur.execute("""DROP TABLE dog_bred_for""")
 
 # id tables setup
 cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
@@ -101,7 +101,7 @@ for dog in doglist:
             dog_temperament2 = dog_temp_split[3]
 
     dog_lifespan = dog['life_span']
-    dog_bred_for = dog.get('dog_bred_for', None)
+    dog_bred_for = dog.get('bred_for', None)
 
     dog_temperament1_id = insert_and_get_id('dog_temperament1', 'dog_temperament1', dog_temperament1)
     dog_temperament2_id = insert_and_get_id('dog_temperament2', 'dog_temperament2', dog_temperament2)
