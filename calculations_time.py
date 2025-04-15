@@ -9,7 +9,22 @@ def get_data_from_table_as_dict(table_name):
     return [dict(row) for row in rows]
 
 
-petswithbreeddata = []
+catlist = []
+pfinderdata = get_data_from_table_as_dict("petfinder")
+specieslist = get_data_from_table_as_dict("species")
+for pet in pfinderdata:
+    petspeciesid = (pet["species"])
+    petspeciesname = 
+
+
+
+# for creature in pfinderdata:
+#     species = (creature["species"])
+#     print(species)
+
+
+catswithbreeddata = []
+dogswithbreeddata = []
 
 catbreeddata = get_data_from_table_as_dict("catinfo")
 for cat in catbreeddata:
@@ -18,7 +33,7 @@ for cat in catbreeddata:
     for creature in allbreeddata:
         creaturebreed = (creature['breed'])
         if catbreed == creaturebreed:
-            petswithbreeddata.append(creature)
+            catswithbreeddata.append(creature)
 
 dogbreeddata = get_data_from_table_as_dict("doginfo")
 for dog in dogbreeddata:
@@ -27,7 +42,6 @@ for dog in dogbreeddata:
     for creature in allbreeddata:
         creaturebreed = (creature['breed'])
         if dogbreed == creaturebreed:
-            petswithbreeddata.append(creature)
+            dogswithbreeddata.append(creature)
 
 
-print(petswithbreeddata)
