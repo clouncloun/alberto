@@ -12,15 +12,28 @@ api_key = os.getenv("API_KEY")
 url = "https://api.thecatapi.com/v1/breeds" 
 headers = {"Authorization": f"Bearer {api_key}"}
 
-response = requests.get(url, headers=headers)
-if response.status_code == 200:
-    data = response.json()
-    catlist = []
-    for cat in data:
-        catlist.append(cat)
+catlist = []
+page = 0
 
-else:
-    print(f"Error: {response.status_code}, Message: {response.text}")
+while True:
+    params = {
+        "limit": 25,
+        "page": page
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code != 200:
+        print(f"Error: {response.status_code}, Message: {response.text}")
+        break
+
+    data = response.json()
+
+    # Stop the loop if there's no more data
+    if not data:
+        break
+
+    catlist.extend(data)
+    page += 1
 
 
 # setting up database
