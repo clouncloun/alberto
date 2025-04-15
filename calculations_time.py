@@ -20,5 +20,14 @@ for cat in catbreeddata:
         if catbreed == creaturebreed:
             petswithbreeddata.append(creature)
 
+dogbreeddata = get_data_from_table_as_dict("doginfo")
+for dog in dogbreeddata:
+    dogbreed = (dog["dog_breedname"])
+    allbreeddata = get_data_from_table_as_dict("breeds")
+    for creature in allbreeddata:
+        creaturebreed = (creature['breed'])
+        if dogbreed == creaturebreed:
+            petswithbreeddata.append(creature)
+
 
 print(petswithbreeddata)
