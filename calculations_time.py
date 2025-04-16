@@ -178,8 +178,18 @@ for realdog, pfscore in petfinderscores.items():
 
 # okayyyy now it's cat time
 
-# i'm doing cat hair length
+# makes a list of all the cats that we have the breeds for in catinfo
+cats_with_breed_data = []
+cats_no_breed_data = []
+catbreeddata = get_data_from_table_as_dict("catinfo")
 for cat in catlist:
-    print(cat["breed_name"])
-    if cat["breed_name"] == "Domestic Short Hair":
-        dog["breed_name"] = "American Shorthair"
+    catbreed = cat["breed_name"]
+    found = False
+    for breed in catbreeddata:
+        if breed["cat_breedname"] == catbreed:
+            cats_with_breed_data.append(cat)
+            found = True
+            break
+    if not found:
+        cats_no_breed_data.append(catbreed)
+
