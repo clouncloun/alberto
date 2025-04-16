@@ -74,29 +74,38 @@ for breed, count in breed_counts.items():
 
 # time to work with the temperaments!
 
-nicedogs = []
+nicedogs = {}
 for breed in dogbreeddata:
     breedname = breed["dog_breedname"]
     temperament = breed["dog_temperament"]
     if temperament is not None:
         temperament = temperament.split(", ")
+        niceness = 0
         if "Gentle" in temperament:
-            nicedogs.append(breedname)
-        elif "Calm" in temperament:
-            nicedogs.append(breedname)
+            niceness += 2
+        if "Calm" in temperament:
+            niceness += 2
+        if "Friendly" in temperament:
+            niceness += 1
+        if "Trainable" in temperament:
+            niceness += 1
+        if "Patient" in temperament:
+            niceness += 1
+        if "Sociable" in temperament:
+            niceness += 1
+        nicedogs[breedname] = niceness
+
         
 nicepetfinderdogs = {}
 for dog in dogs_with_breed_data:
     dogbreed = (dog["breed_name"])
     nicescore = (dog["good_with_children"])
-    
     if dogbreed not in nicepetfinderdogs:
         nicepetfinderdogs[dogbreed] = (nicescore,)
     if dogbreed in nicepetfinderdogs:
         nicepetfinderdogs[dogbreed] += (nicescore,)
-    
 for name, scorelist in nicepetfinderdogs.items():
     listlength = (len(scorelist))
     listsum = (sum(scorelist))
     dogbreedscore = listsum / listlength
-    print(name, dogbreedscore)
+    #print(name, dogbreedscore)

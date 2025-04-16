@@ -70,8 +70,6 @@ CREATE TABLE IF NOT EXISTS doginfo (
     FOREIGN KEY (dog_lifespan_id) REFERENCES dog_lifespans(id)
 )
 """)
-# for dog in doglist:
-#     print(dog)
 
 
 # putting data in the id tables
