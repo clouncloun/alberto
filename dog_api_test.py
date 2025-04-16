@@ -41,9 +41,6 @@ path = os.path.dirname(os.path.abspath(__file__))
 conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
 
-cur.execute("""DROP TABLE dog_temperament2""")
-
-
 # id tables setup
 cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
     id INTEGER PRIMARY KEY, 
