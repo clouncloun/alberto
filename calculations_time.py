@@ -9,7 +9,7 @@ def get_data_from_table_as_dict(table_name):
     return [dict(row) for row in rows]
 
 
-# separate petfinder pets into cats and dogs
+# separate petfinder pets into catlist and doglist 
 catlist = []
 doglist = []
 pfinderdata = get_data_from_table_as_dict("petfinder")
