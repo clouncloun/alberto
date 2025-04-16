@@ -12,8 +12,8 @@ def get_data_from_table_as_dict(table_name):
 # separate petfinder pets into catlist and doglist 
 catlist = []
 doglist = []
-pfinderdata = get_data_from_table_as_dict("petfinder")
-specieslist = get_data_from_table_as_dict("species")
+pfinderdata = get_data_from_table_as_dict("petfinder_pets")
+specieslist = get_data_from_table_as_dict("petfinder_species")
 
 speciesdict = {}
 for item in specieslist:
@@ -22,7 +22,6 @@ for item in specieslist:
 for pet in pfinderdata:
     petspeciesid = pet["species"]
     petspeciesname = speciesdict.get(petspeciesid, "Unknown")
-    print(petspeciesname)
     if petspeciesname.lower() == "cat":
         catlist.append(pet)
     if petspeciesname.lower() == "dog":
@@ -30,7 +29,7 @@ for pet in pfinderdata:
 
 
 # get breed from the id table for each cat in the catlist, each dog in the doglist
-breedslist = get_data_from_table_as_dict("breeds")
+breedslist = get_data_from_table_as_dict("petfinder_breeds")
 
 breeddict = {b["id"]: b["breed"] for b in breedslist}
 for cat in catlist:
@@ -54,7 +53,7 @@ for dog in doglist:
             dogs_with_breed_data.append(dog)
             break
 
-print(dogs_with_breed_data)
+#print(dogs_with_breed_data)
 
 # finding what the most common breed is
 breed_counts = {}
@@ -71,3 +70,33 @@ for breed, count in breed_counts.items():
         most_common_breed = breed
         highest_breed_count = count
 
+
+
+# time to work with the temperaments!
+
+nicedogs = []
+for breed in dogbreeddata:
+    breedname = breed["dog_breedname"]
+    temperament = breed["dog_temperament"]
+    if temperament is not None:
+        temperament = temperament.split(", ")
+        if "Gentle" in temperament:
+            nicedogs.append(breedname)
+        elif "Calm" in temperament:
+            nicedogs.append(breedname)
+        
+nicepetfinderdogs = {}
+for dog in dogs_with_breed_data:
+    dogbreed = (dog["breed_name"])
+    nicescore = (dog["good_with_children"])
+    
+    if dogbreed not in nicepetfinderdogs:
+        nicepetfinderdogs[dogbreed] = (nicescore,)
+    if dogbreed in nicepetfinderdogs:
+        nicepetfinderdogs[dogbreed] += (nicescore,)
+    
+for name, scorelist in nicepetfinderdogs.items():
+    listlength = (len(scorelist))
+    listsum = (sum(scorelist))
+    dogbreedscore = listsum / listlength
+    print(name, dogbreedscore)
