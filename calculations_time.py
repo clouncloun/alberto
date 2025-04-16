@@ -41,18 +41,48 @@ for dog in doglist:
     breed_name = breeddict.get(breed_id, "Unknown")
     dog["breed_name"] = breed_name
 
+# adding breeds manually that don't match
+for dog in doglist:
+    if dog["breed_name"] == "Pit Bull Terrier":
+        dog["breed_name"] = "American Pit Bull Terrier"
+    if dog["breed_name"] == "English Bulldog":
+        dog["breed_name"] = "Olde English Bulldogge"
+    if dog["breed_name"] == "Bulldog":
+        dog["breed_name"] = "Olde English Bulldogge"
+    if dog["breed_name"] == "Shar-Pei":
+        dog["breed_name"] = "Chinese Shar-Pei"
+    if dog["breed_name"] == "Hound":
+        dog["breed_name"] = "Basset Hound"
+    if "Labrador Retriever" in dog["breed_name"]:
+        dog["breed_name"] = "Labrador Retriever"
+    if "German Shepherd" in dog["breed_name"]:
+        dog["breed_name"] = "German Shepherd Dog"
+    if dog["breed_name"] == "Cattle Dog":
+        dog["breed_name"] = "Australian Cattle Dog"
+    if dog["breed_name"] == "Husky":
+        dog["breed_name"] = "Siberian Husky"
+    if dog["breed_name"] == "Australian Cattle Dog / Blue Heeler":
+        dog["breed_name"] = "Australian Cattle Dog"
+    if dog["breed_name"] == "Schnauzer":
+        dog["breed_name"] = "Giant Schnauzer"
+    if dog["breed_name"] == "Collie":
+        dog["breed_name"] = "Border Collie"
+
     
 # makes a list of all the dogs that we have the breeds for in doginfo
 dogs_with_breed_data = []
+dogs_no_breed_data = []
 dogbreeddata = get_data_from_table_as_dict("doginfo")
 for dog in doglist:
     dogbreed = dog["breed_name"]
+    found = False
     for breed in dogbreeddata:
-        breedname = breed["dog_breedname"]
-        if breedname == dogbreed:
+        if breed["dog_breedname"] == dogbreed:
             dogs_with_breed_data.append(dog)
+            found = True
             break
-
+    if not found:
+        dogs_no_breed_data.append(dogbreed)
 #print(dogs_with_breed_data)
 
 # finding what the most common breed is
@@ -69,6 +99,9 @@ for breed, count in breed_counts.items():
     if count > highest_breed_count:
         most_common_breed = breed
         highest_breed_count = count
+
+sorted_breeddict = sorted(breed_counts.items(), key=lambda item: item[1], reverse=True)
+# most common breeds of dogs: (sorted_breeddict)
 
 
 
