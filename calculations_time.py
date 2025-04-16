@@ -101,12 +101,16 @@ for breed, count in breed_counts.items():
         highest_breed_count = count
 
 sorted_breeddict = sorted(breed_counts.items(), key=lambda item: item[1], reverse=True)
-# most common breeds of dogs: (sorted_breeddict)
+# most common breeds of dogs: 
+# print(sorted_breeddict)
 
 
 
 # time to work with the temperaments!
 
+
+########### nicedogs is a dictionary of scores (0-100 scale) describing how
+########### nice breeds in the dog api are.  
 nicedogs = {}
 for breed in dogbreeddata:
     breedname = breed["dog_breedname"]
@@ -126,10 +130,16 @@ for breed in dogbreeddata:
             niceness += 1
         if "Sociable" in temperament:
             niceness += 1
-        nicedogs[breedname] = niceness
+        nicescore = niceness / 5
+        nicedogs[breedname] = round(nicescore * 100)
+#print(nicedogs)
 
-        
+
+
+########### nicepetfinderdogs is a dictionary of scores (0-100 scale) describing
+########### how child friendly breeds in petfinder are.   
 nicepetfinderdogs = {}
+petfinderscores = {}
 for dog in dogs_with_breed_data:
     dogbreed = (dog["breed_name"])
     nicescore = (dog["good_with_children"])
@@ -141,4 +151,26 @@ for name, scorelist in nicepetfinderdogs.items():
     listlength = (len(scorelist))
     listsum = (sum(scorelist))
     dogbreedscore = listsum / listlength
-    #print(name, dogbreedscore)
+    petfinderscores[name] = dogbreedscore
+
+min_score = min(petfinderscores.values())
+max_score = max(petfinderscores.values())
+
+for breed, score in petfinderscores.items():
+    if max_score - min_score == 0:
+        petfinderscores[breed] = 0
+    else:
+        normalized = (score - min_score) / (max_score - min_score)
+        petfinderscores[breed] = round(normalized * 100)
+#print(petfinderscores)
+
+'''
+# comparing the two!! 
+count = 1
+for realdog, pfscore in petfinderscores.items():
+    for datadog, apiscore in nicedogs.items(): 
+        if realdog == datadog:
+            print(f"dog: {realdog}")
+            print(f"petfinder score: {pfscore}")
+            print(f"dog api score: {apiscore}")
+'''
