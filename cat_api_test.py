@@ -35,11 +35,11 @@ while True:
     catlist.extend(data)
     page += 1
 
-
 # setting up database
 path = os.path.dirname(os.path.abspath(__file__))
 conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
 cur = conn.cursor()
+
 
 # id tables setup
 cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
@@ -62,11 +62,10 @@ CREATE TABLE IF NOT EXISTS catinfo (
     cat_lifespan_id INTEGER,
     cat_shedding_level INTEGER,
     cat_health_issues INTEGER,
+    cat_child_friendly INTEGER,
     cat_intelligence INTEGER,
     FOREIGN KEY (cat_origin_id) REFERENCES cat_origins(id),
     FOREIGN KEY (cat_lifespan_id) REFERENCES cat_lifespans(id)
-
-
 )
 """)
 
@@ -85,15 +84,16 @@ for cat in catlist:
     cat_lifespan = cat['life_span']
     cat_shedding_level = cat.get('shedding_level', None)
     cat_health_issues = cat.get('health_issues', None)
+    cat_child_friendly = cat.get('child_friendly', None)
     cat_intelligence = cat.get('intelligence', None)
     cat_origin_id = insert_and_get_id('cat_origins', 'cat_origin', cat_origin)
     cat_lifespan_id = insert_and_get_id('cat_lifespans', 'cat_lifespan', cat_lifespan)
 
     cur.execute("""
         INSERT OR IGNORE INTO catinfo 
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
-        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
+        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
     )
 
 conn.commit()

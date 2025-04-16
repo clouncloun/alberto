@@ -174,3 +174,12 @@ for realdog, pfscore in petfinderscores.items():
             print(f"petfinder score: {pfscore}")
             print(f"dog api score: {apiscore}")
 '''
+
+
+# okayyyy now it's cat time
+
+# i'm doing cat hair length
+for cat in catlist:
+    print(cat["breed_name"])
+    if cat["breed_name"] == "Domestic Short Hair":
+        dog["breed_name"] = "American Shorthair"
