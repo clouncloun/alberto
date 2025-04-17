@@ -217,4 +217,31 @@ for breed in catbreeddata:
         maintenancescore = maintenance / 5
         maintenancecats[catbreedname] = round(maintenancescore * 100)
 
-print(maintenancecats)
+#print(maintenancecats)
+
+maintenancepetfindercats = {}
+catpetfinderscores = {}
+for cat in cats_with_breed_data:
+    catbreed = (cat["breed_name"])
+    maintenancescore = (cat["house_trained"])
+    if catbreed not in maintenancepetfindercats:
+        maintenancepetfindercats[catbreed] = (maintenancescore,)
+    if catbreed in maintenancepetfindercats:
+        maintenancepetfindercats[catbreed] += (maintenancescore,)
+for name, scorelist in maintenancepetfindercats.items():
+    listlength = (len(scorelist))
+    listsum = (sum(scorelist))
+    catbreedscore = listsum / listlength
+    catpetfinderscores[name] = catbreedscore
+
+min_score = min(catpetfinderscores.values())
+max_score = max(catpetfinderscores.values())
+
+for breed, score in catpetfinderscores.items():
+    if max_score - min_score == 0:
+        catpetfinderscores[breed] = 0
+    else:
+        normalized = (score - min_score) / (max_score - min_score)
+        catpetfinderscores[breed] = round(normalized * 100)
+
+print(catpetfinderscores)
