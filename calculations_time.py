@@ -193,3 +193,28 @@ for cat in catlist:
     if not found:
         cats_no_breed_data.append(catbreed)
 
+maintenancecats = {}
+for breed in catbreeddata:
+    catbreedname = breed["cat_breedname"]
+    shedding_level = breed["cat_shedding_level"]
+    health_issues = breed["cat_health_issues"]
+    if health_issues != 0 and shedding_level != 0:
+        maintenance = 0
+        if shedding_level <= 2:
+            maintenance += 1
+        if shedding_level == 3:
+            maintenance += 2
+        if shedding_level == 4:
+            maintenance += 3
+        if shedding_level == 5:
+            maintenance += 4
+        if health_issues <= 2:
+            maintenance += 1
+        if health_issues == 3:
+            maintenance += 2
+        if health_issues == 4:
+            maintenance += 3
+        maintenancescore = maintenance / 5
+        maintenancecats[catbreedname] = round(maintenancescore * 100)
+
+print(maintenancecats)
