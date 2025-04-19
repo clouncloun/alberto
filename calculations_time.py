@@ -1,4 +1,5 @@
 import sqlite3
+import csv
 
 def get_data_from_table_as_dict(table_name):
     conn = sqlite3.connect("petfinder_pets.db")
@@ -167,7 +168,6 @@ for breed, score in petfinderscores.items():
 
 '''
 # comparing the two!! 
-count = 1
 for realdog, pfscore in petfinderscores.items():
     for datadog, apiscore in nicedogs.items(): 
         if realdog == datadog:
@@ -175,6 +175,23 @@ for realdog, pfscore in petfinderscores.items():
             print(f"petfinder score: {pfscore}")
             print(f"dog api score: {apiscore}")
 '''
+
+# writing the csv
+with open("dog_scores.csv", "w", newline="") as csvfile:
+    fieldnames = ["breed", "pfscore", "apiscore"]
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for breed in petfinderscores:
+        if breed in nicedogs:
+            writer.writerow({
+                "breed": breed,
+                "pfscore": petfinderscores[breed],
+                "apiscore": nicedogs[breed]
+            })
+
+
+
 
 
 # okayyyy now it's cat time
@@ -245,4 +262,4 @@ for breed, score in catpetfinderscores.items():
         normalized = (score - min_score) / (max_score - min_score)
         catpetfinderscores[breed] = round(normalized * 100)
 
-print(catpetfinderscores)
+#print(catpetfinderscores)
