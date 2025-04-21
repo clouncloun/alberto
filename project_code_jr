@@ -5,11 +5,26 @@ import json
 import os 
 import matplotlib.pyplot as plt
 import pandas as pd
-#import geopandas as gpd
+import geopandas as gpd
 import seaborn as sns
 import csv
 
 # hi i have geopandas commented out bc it didnt work on my computer - feel free to change it back. thats the only change i made here! -audie
+
+'''Get current page number (1 if run for the first time, or stored in a file)'''
+def get_current_page(page_file):
+    if os.path.exists(page_file):
+        with open(page_file, 'r') as f:
+            try:
+                return int(f.read().strip())
+            except:
+                return 1
+    return 1
+
+'''Save the current page number to a file so we can autoincrement'''
+def save_current_page(page, page_file):
+    with open(page_file, 'w') as f:
+        f.write(str(page))
 
 '''Get information from PetFinder API'''
 def get_petfinder_data(SECRET, KEY, cur, conn):
@@ -29,25 +44,20 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     params = {}
     '''Collect animals for the database. The 25 limits to 25 per page, and the loop allows us to collect multiple pages per call'''
     collected_animals = []
-    max_pages = 2
-    current_page = 1
-    limit = 50
-    while current_page <= max_pages:
-        try:
-            params['page'] = current_page
-            params['limit'] = limit
-            got = requests.get(url, headers=headers, params=params)
-            if got.status_code == 200:
-                animal_data = got.json()
-                # print(animal_data.keys())
-                # print(f"The animal data is {json.dumps(animal_data, indent = 2)}")
-                for animal in animal_data['animals']:
-                    collected_animals.append(animal)
-                # collected_animals.extend(animal_data)
-                #print(f"Collected animals are {collected_animals}")
-                current_page += 1
-        except:
-            print('Request Failed')
+    current_page = get_current_page('last_page.txt')
+    next_page = current_page + 1
+    limit = 25
+    try:
+        params['page'] = current_page
+        params['limit'] = limit
+        got = requests.get(url, headers=headers, params=params)
+        if got.status_code == 200:
+            animal_data = got.json()
+            for animal in animal_data['animals']:
+                collected_animals.append(animal)
+            save_current_page(next_page, 'last_page.txt')
+    except:
+        print('Request Failed')
     
    
 
@@ -159,9 +169,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         cur.execute("""INSERT OR IGNORE INTO petfinder_states (id, state) VALUES (?,?)""", (i, state_list[i]))
 
     '''Populate the perfinder table with the information from the API and the various tables'''
-    id_counter = 0
     for animal in collected_animals:
-        a_id = id_counter
         a_name = animal['name']
         pri_spc = animal['species']
         cur.execute("""SELECT * FROM petfinder_species""")
@@ -218,9 +226,8 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
             if row[1] == pri_state:
                 a_state = row[0]
         cur.execute("""INSERT OR IGNORE INTO petfinder_pets
-                    (id, name, species, breed, age, gender, size, good_with_children, spayed_neutered, house_trained, state)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""", (a_id, a_name, a_specie, a_breed, a_age, a_gender, a_size, a_child, a_spay, a_house, a_state))
-        id_counter += 1
+                    (name, species, breed, age, gender, size, good_with_children, spayed_neutered, house_trained, state)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)""", (a_name, a_specie, a_breed, a_age, a_gender, a_size, a_child, a_spay, a_house, a_state))
     conn.commit()
 
 '''Create dictionary to tell us where most of the animals are comming from'''
@@ -270,60 +277,60 @@ def set_up_database(db_name):
     cur = conn.cursor()
     return cur, conn
 
-# '''Create a map visualization of pets'''
-# def create_map_visualization(plt, gpd, pd, sns, data):
-#     '''Read in geological data from Geopandas in order to make visualization'''
-#     us_states = gpd.read_file('ne_110m_admin_1_states_provinces.shp')
+'''Create a map visualization of pets'''
+def create_map_visualization(plt, gpd, pd, sns, data):
+    '''Read in geological data from Geopandas in order to make visualization'''
+    us_states = gpd.read_file('ne_110m_admin_1_states_provinces.shp')
 
-#     '''Limit our map to the US'''
-#     us_states = us_states[us_states['admin'] == 'United States of America']
+    '''Limit our map to the US'''
+    us_states = us_states[us_states['admin'] == 'United States of America']
     
-#     '''Set style for the map using the Seaborn package'''
-#     sns.set_theme(style='whitegrid')
+    '''Set style for the map using the Seaborn package'''
+    sns.set_theme(style='whitegrid')
 
-#     '''Create abbreviations to use in the visualization'''
-#     full_name_st = {'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-#                      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': "Illinois", 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-#                      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-#                      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-#                      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-#                      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'}
+    '''Create abbreviations to use in the visualization'''
+    full_name_st = {'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+                     'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': "Illinois", 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+                     'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+                     'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+                     'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                     'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'}
     
-#     '''Convert the data into a datafram so that it can be used for the map'''
-#     st_abbreviation = {v: k for k, v in full_name_st.items()}
-#     pet_data = pd.DataFrame.from_dict(data, orient='index', columns=['pet_count'])
-#     pet_data.index.name = 'state_abbr'
-#     pet_data.reset_index(inplace=True)
-#     pet_data['state_name'] = pet_data['state_abbr'].map(full_name_st)
+    '''Convert the data into a datafram so that it can be used for the map'''
+    st_abbreviation = {v: k for k, v in full_name_st.items()}
+    pet_data = pd.DataFrame.from_dict(data, orient='index', columns=['pet_count'])
+    pet_data.index.name = 'state_abbr'
+    pet_data.reset_index(inplace=True)
+    pet_data['state_name'] = pet_data['state_abbr'].map(full_name_st)
     
-#     '''Merge my data wth the geographical data'''
-#     merged = us_states.set_index('name').join(pet_data.set_index('state_name'))
-#     fig, ax = plt.subplots(figsize=(15, 8), facecolor='#f5f5f5')
+    '''Merge my data wth the geographical data'''
+    merged = us_states.set_index('name').join(pet_data.set_index('state_name'))
+    fig, ax = plt.subplots(figsize=(15, 8), facecolor='#f5f5f5')
     
-#     '''Create the map and make it so there are borders, labels, and a gradient'''
-#     merged.plot(column='pet_count', ax=ax, cmap='YlOrRd', edgecolor='black', linewidth=0.5, legend=True, legend_kwds={'label': "Pet Population", 'shrink': 0.7, 'orientation': 'horizontal', 'pad': 0.02}, missing_kwds={'color': 'lightgrey', 'edgecolor': 'black', 'hatch': '///', 'label': 'No data'})
+    '''Create the map and make it so there are borders, labels, and a gradient'''
+    merged.plot(column='pet_count', ax=ax, cmap='YlOrRd', edgecolor='black', linewidth=0.5, legend=True, legend_kwds={'label': "Pet Population", 'shrink': 0.7, 'orientation': 'horizontal', 'pad': 0.02}, missing_kwds={'color': 'lightgrey', 'edgecolor': 'black', 'hatch': '///', 'label': 'No data'})
     
-#     '''Add a label for every state'''
-#     for idx, row in merged.iterrows():
-#         centroid = row.geometry.centroid
-#         state_abbr = st_abbreviation.get(idx, idx[:2].upper())
-#         ax.text(x=centroid.x, y=centroid.y, s=state_abbr, fontsize=8, ha='center', va='center', color='black', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2'))
+    '''Add a label for every state'''
+    for idx, row in merged.iterrows():
+        centroid = row.geometry.centroid
+        state_abbr = st_abbreviation.get(idx, idx[:2].upper())
+        ax.text(x=centroid.x, y=centroid.y, s=state_abbr, fontsize=8, ha='center', va='center', color='black', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2'))
         
-#     '''Set visualization title'''
-#     ax.set_title('Pet Population by US State', fontsize=16, pad=20)
+    '''Set visualization title'''
+    ax.set_title('Pet Population by US State', fontsize=16, pad=20)
    
-#     '''Set background color'''
-#     ax.set_facecolor('#e0e9f5')
+    '''Set background color'''
+    ax.set_facecolor('#e0e9f5')
     
-#     '''Add a border around the map'''
-#     for spine in ax.spines.values():
-#         spine.set_visible(True)
-#         spine.set_edgecolor('black')
-#         spine.set_linewidth(2)
-#     ax.axis('off')
-#     plt.figtext(0.5, 0.01, 'Data Source: Natural Earth and PetFinder API | Visualization by Miranda Tess', ha="center", fontsize=9, color='gray')
-#     plt.tight_layout()
-#     return fig, ax
+    '''Add a border around the map'''
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_edgecolor('black')
+        spine.set_linewidth(2)
+    ax.axis('off')
+    plt.figtext(0.5, 0.01, 'Data Source: Natural Earth and PetFinder API | Visualization by Miranda Tess', ha="center", fontsize=9, color='gray')
+    plt.tight_layout()
+    return fig, ax
 
 '''Create a function to write files with our calculations'''
 def write_file_breeds(filename, data):
@@ -335,15 +342,14 @@ def write_file_breeds(filename, data):
         writer.writerows(prepped_data)
 
 def main():
-    getters = set_up_database('petfinder_pets.db')
-    #info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
+    getters = set_up_database('petfinder_test.db')
+    info = get_petfinder_data('lfldIgN2VGYjNVrPSE52R3nXRB7mqYLkK7a9iNBh','dy5jlozijkrfKbzmZMMqcDLcozUdcZp2Yn4CR8tLlSGtIZrvH3', getters[0], getters[1])
     #info2 = get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', getters[0], getters[1])
-    states = state_w_most_pets(getters[0])
-    breeds = breed_most_often(getters[0])
-    #print(breeds)
-    write_file_breeds('petfinder_breeds.csv', breeds)
+    #states = state_w_most_pets(getters[0])
+    #breeds = breed_most_often(getters[0])
+    #write_file_breeds('petfinder_breeds.csv', breeds)
     ages = age_most_common(getters[0])
-    states_dict = dict(states)
+    #states_dict = dict(states)
     #fig, ax = create_map_visualization(plt, gpd, pd, sns, states_dict)
     plt.show()
 
