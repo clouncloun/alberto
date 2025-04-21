@@ -4,7 +4,7 @@ import os
 import sqlite3
 
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY = "live_xID7zgqcyR7lDxE0qssvubFHqGX8kJ7w5BHevQNoUh2jpvOU19ORgKX0uJSM3nXQ"
 
 COUNTER_FILE = 'cat_counter.txt'
 

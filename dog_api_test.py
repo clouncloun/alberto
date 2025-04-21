@@ -4,7 +4,7 @@ import os
 import sqlite3
 
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY = "live_5hy8HGezYufdDjX10cnmJbLLgp34L52f7ZUEv0BeIQU9T69hmdFjtCshS2RZ672v" 
 
 COUNTER_FILE = 'dog_counter.txt'
 
@@ -21,9 +21,9 @@ def save_current_index(index):
     with open(COUNTER_FILE, 'w') as f:
         f.write(str(index))
 
-def fetch_dog_data(api_key):
+def fetch_dog_data(api_key, limit=25):
     url = "https://api.thedogapi.com/v1/breeds"
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {"x-api-key": api_key}
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -104,7 +104,7 @@ def main():
     current_index = get_current_index()
     batch, new_index = get_next_batch(doglist, current_index)
     conn, cur = setup_database()
-    inserted = insert_dog_data(batch, cur)
+    insert_dog_data(batch, cur)
     conn.commit()
     if len(batch) == 25:
         save_current_index(new_index)
