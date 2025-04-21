@@ -263,3 +263,16 @@ for breed, score in catpetfinderscores.items():
         catpetfinderscores[breed] = round(normalized * 100)
 
 #print(catpetfinderscores)
+# writing the csv
+with open("cat_scores.csv", "w", newline="") as csvfile:
+    fieldnames = ["breed", "pfscore", "apiscore"]
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+    for breed in catpetfinderscores:
+        if breed in maintenancecats:
+            writer.writerow({
+                "breed": breed,
+                "pfscore": catpetfinderscores[breed],
+                "apiscore": maintenancecats[breed]
+            })
