@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 import csv
 
-# hi i have geopandas commented out bc it didnt work on my computer - feel free to change it back. thats the only change i made here! -audie
+# hi i have geopandas commented out bc it didnt work on my computer - feel free to change it back. 
 
 '''Get current page number (1 if run for the first time, or stored in a file)'''
 def get_current_page(page_file):
@@ -63,6 +63,8 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
    
 
     '''Create the main data table with individual animal information'''
+
+    cur.execute("DROP TABLE IF EXISTS petfinder_good_with_children")
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_pets 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
@@ -77,6 +79,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         state INTEGER
         )
     """)
+
     
     '''Creat the table for the keys for species'''
     species_list = []
@@ -94,9 +97,9 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         breed = animal['breeds']['primary']
         if breed not in breeds_list:
             breeds_list.append(breed)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_breeds (id INTEGER PRIMARY KEY, breed TEXT)""")
-    for i in range(len(breeds_list)):
-        cur.execute("""INSERT OR IGNORE INTO petfinder_breeds (id, breed) VALUES (?,?)""", (i, breeds_list[i]))
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_breeds (id INTEGER PRIMARY KEY AUTOINCREMENT, breed TEXT UNIQUE)""")
+    for breed in breeds_list:
+        cur.execute("""INSERT OR IGNORE INTO petfinder_breeds (breed) VALUES (?)""", (breed,))
     
     '''Creat table for the keys for ages'''
     age_list = []
@@ -124,37 +127,38 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         size = animal['size']
         if size not in size_list:
             size_list.append(size)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_sizes (id INTEGER PRIMARY KEY, size)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_sizes (id INTEGER PRIMARY KEY, size TEXT)""")
     for i in range(len(size_list)):
         cur.execute("""INSERT OR IGNORE INTO petfinder_sizes (id, size) VALUES (?,?)""", (i, size_list[i]))
 
     '''Create table to tell us if the animal is good with children'''
     child_list = []
     for animal in collected_animals:
-        child = animal['environment']['children']
+        #print(animal)
+        child = str(animal['environment'].get('children'))  # Convert to string
         if child not in child_list:
             child_list.append(child)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_good_with_children (id INTEGER PRIMARY KEY, child)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_good_with_children (id INTEGER PRIMARY KEY, child TEXT)""")
     for i in range(len(child_list)):
         cur.execute("""INSERT OR IGNORE INTO petfinder_good_with_children (id, child) VALUES (?,?)""", (i, child_list[i]))
 
     '''Create the table to tell us if the animal is spayed or not'''
     spay_list = []
     for animal in collected_animals:
-        status = animal['attributes']['spayed_neutered']
+        status = str(animal['attributes']['spayed_neutered'])
         if status not in spay_list:
             spay_list.append(status)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_spayed_neutered (id INTEGER PRIMARY KEY, status)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_spayed_neutered (id INTEGER PRIMARY KEY, status TEXT)""")
     for i in range(len(spay_list)):
         cur.execute("""INSERT OR IGNORE INTO petfinder_spayed_neutered (id, status) VALUES (?,?)""", (i, spay_list[i]))
     
     '''Create a table to tell us if the animal is house trained'''
     house_list = []
     for animal in collected_animals:
-        house = animal['attributes']['house_trained']
+        house = str(animal['attributes']['house_trained'])
         if house not in house_list:
             house_list.append(house)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_house_trained (id INTEGER PRIMARY KEY, house_trained)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_house_trained (id INTEGER PRIMARY KEY, house_trained TEXT)""")
     for i in range(len(house_list)):
         cur.execute("""INSERT OR IGNORE INTO petfinder_house_trained (id, house_trained) VALUES (?,?)""", (i, house_list[i]))
 
@@ -202,19 +206,20 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         for row in cur:
             if row[1] == pri_size:
                 a_size = row[0]
-        pri_children = animal['environment']['children']
-        cur.execute("""SELECT * FROM petfinder_good_with_children""")
-        a_child = 0
+        pri_children = str(animal['environment'].get('children'))  # Convert to string
+        cur.execute("SELECT id, child FROM petfinder_good_with_children")
+        a_child = 0  # Fallback if not found
         for row in cur:
             if row[1] == pri_children:
                 a_child = row[0]
-        pri_spay = animal['attributes']['spayed_neutered']
+                break
+        pri_spay = str(animal['attributes']['spayed_neutered'])
         cur.execute("""SELECT * FROM petfinder_spayed_neutered""")
         a_spay = 0
         for row in cur:
             if row[1] == pri_spay:
                 a_spay = row[0]
-        pri_house = animal['attributes']['house_trained']
+        pri_house = str(animal['attributes']['house_trained'])
         cur.execute("""SELECT * FROM petfinder_house_trained""")
         a_house = 0
         for row in cur:
