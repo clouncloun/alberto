@@ -6,28 +6,36 @@ import sqlite3
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
+COUNTER_FILE = 'cat_counter.txt'
+
+def get_current_index():
+    if os.path.exists(COUNTER_FILE):
+        with open(COUNTER_FILE, 'r') as f:
+            try:
+                return int(f.read().strip())
+            except:
+                return 0
+    return 0
+
+def save_current_index(index):
+    with open(COUNTER_FILE, 'w') as f:
+        f.write(str(index))
+
 def fetch_cat_data(api_key, limit=25):
     url = "https://api.thecatapi.com/v1/breeds"
     headers = {"Authorization": f"Bearer {api_key}"}
-    catlist = []
-    page = 0
-
-    while True:
-        params = {"limit": limit, "page": page}
-        response = requests.get(url, headers=headers, params=params)
-
-        if response.status_code != 200:
-            print(f"Error: {response.status_code}, Message: {response.text}")
-            break
-
-        data = response.json()
-        if not data:
-            break
-
-        catlist.extend(data)
-        page += 1
-
-    return catlist
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json()
+    except:
+        print('Error Fetching Cat Data')
+        return []
+    
+def get_next_batch(data, current_index, batch_size=25):
+    end_index = min(current_index + batch_size, len(data))
+    batch = data[current_index:end_index]
+    return batch, end_index
 
 def setup_database():
     path = os.path.dirname(os.path.abspath(__file__))
@@ -91,9 +99,15 @@ def insert_cat_data(catlist, cur):
 
 def main():
     catlist = fetch_cat_data(API_KEY)
+    current_index = get_current_index()
+    batch, new_index = get_next_batch(catlist, current_index)
     conn, cur = setup_database()
-    insert_cat_data(catlist, cur)
+    inserted = insert_cat_data(batch, cur)
     conn.commit()
+    if len(batch) == 25:
+        save_current_index(new_index)
+    else:
+        save_current_index(0)
     conn.close()
 
 if __name__ == "__main__":
