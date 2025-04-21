@@ -1,110 +1,100 @@
 import requests
 from dotenv import load_dotenv
 import os
-import json
 import sqlite3
 
-
-API_KEY = "live_xID7zgqcyR7lDxE0qssvubFHqGX8kJ7w5BHevQNoUh2jpvOU19ORgKX0uJSM3nXQ"
 load_dotenv()
-api_key = os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")
 
-url = "https://api.thecatapi.com/v1/breeds" 
-headers = {"Authorization": f"Bearer {api_key}"}
+def fetch_cat_data(api_key, limit=25):
+    url = "https://api.thecatapi.com/v1/breeds"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    catlist = []
+    page = 0
 
-catlist = []
-page = 0
+    while True:
+        params = {"limit": limit, "page": page}
+        response = requests.get(url, headers=headers, params=params)
 
-while True:
-    params = {
-        "limit": 25,
-        "page": page
-    }
+        if response.status_code != 200:
+            print(f"Error: {response.status_code}, Message: {response.text}")
+            break
 
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code != 200:
-        print(f"Error: {response.status_code}, Message: {response.text}")
-        break
+        data = response.json()
+        if not data:
+            break
 
-    data = response.json()
+        catlist.extend(data)
+        page += 1
 
-    # Stop the loop if there's no more data
-    if not data:
-        break
+    return catlist
 
-    catlist.extend(data)
-    page += 1
+def setup_database():
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
+    cur = conn.cursor()
 
-# setting up database
-path = os.path.dirname(os.path.abspath(__file__))
-conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
-cur = conn.cursor()
+    cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
+        id INTEGER PRIMARY KEY, 
+        cat_origin TEXT UNIQUE
+    )""")
 
-# id tables setup
-cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
-    id INTEGER PRIMARY KEY, 
-    cat_origin TEXT UNIQUE
-)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS cat_lifespans (
+        id INTEGER PRIMARY KEY, 
+        cat_lifespan TEXT UNIQUE
+    )""")
 
-cur.execute("""CREATE TABLE IF NOT EXISTS cat_lifespans (
-    id INTEGER PRIMARY KEY, 
-    cat_lifespan TEXT UNIQUE
-)""")
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS catinfo (
+        cat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cat_breedname TEXT,
+        cat_temperament TEXT,
+        cat_origin_id INTEGER,
+        cat_lifespan_id INTEGER,
+        cat_shedding_level INTEGER,
+        cat_health_issues INTEGER,
+        cat_child_friendly INTEGER,
+        cat_intelligence INTEGER,
+        FOREIGN KEY (cat_origin_id) REFERENCES cat_origins(id),
+        FOREIGN KEY (cat_lifespan_id) REFERENCES cat_lifespans(id)
+    )""")
 
-# database with individual cat info 
-cur.execute("""
-CREATE TABLE IF NOT EXISTS catinfo (
-    cat_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cat_breedname TEXT,
-    cat_temperament TEXT,
-    cat_origin_id INTEGER,
-    cat_lifespan_id INTEGER,
-    cat_shedding_level INTEGER,
-    cat_health_issues INTEGER,
-    cat_child_friendly INTEGER,
-    cat_intelligence INTEGER,
-    FOREIGN KEY (cat_origin_id) REFERENCES cat_origins(id),
-    FOREIGN KEY (cat_lifespan_id) REFERENCES cat_lifespans(id)
-<<<<<<< HEAD
+    return conn, cur
 
-
-=======
->>>>>>> 0a4d62c0e27bd667a4dbb3e7940e0c46c5b7864a
-)
-""")
-
-#print(catlist)
-
-# putting data in the id tables
-def insert_and_get_id(table, column, value):
+def insert_and_get_id(cur, table, column, value):
     cur.execute(f"INSERT OR IGNORE INTO {table} ({column}) VALUES (?)", (value,))
     cur.execute(f"SELECT id FROM {table} WHERE {column} = ?", (value,))
     return cur.fetchone()[0]
 
-for cat in catlist:
-    cat_breedname = cat['name']
-    cat_temperament = cat.get('temperament', None)
-    cat_origin = cat['origin']
-    cat_lifespan = cat['life_span']
-    cat_shedding_level = cat.get('shedding_level', None)
-    cat_health_issues = cat.get('health_issues', None)
-    cat_child_friendly = cat.get('child_friendly', None)
-    cat_intelligence = cat.get('intelligence', None)
-    cat_origin_id = insert_and_get_id('cat_origins', 'cat_origin', cat_origin)
-    cat_lifespan_id = insert_and_get_id('cat_lifespans', 'cat_lifespan', cat_lifespan)
+def insert_cat_data(catlist, cur):
+    for cat in catlist:
+        cat_breedname = cat.get('name')
+        cat_temperament = cat.get('temperament')
+        cat_origin = cat.get('origin')
+        cat_lifespan = cat.get('life_span')
+        cat_shedding_level = cat.get('shedding_level')
+        cat_health_issues = cat.get('health_issues')
+        cat_child_friendly = cat.get('child_friendly')
+        cat_intelligence = cat.get('intelligence')
 
-    cur.execute("""
-        INSERT OR IGNORE INTO catinfo 
-<<<<<<< HEAD
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
-        VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
-=======
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
->>>>>>> 0a4d62c0e27bd667a4dbb3e7940e0c46c5b7864a
-    )
+        cat_origin_id = insert_and_get_id(cur, 'cat_origins', 'cat_origin', cat_origin)
+        cat_lifespan_id = insert_and_get_id(cur, 'cat_lifespans', 'cat_lifespan', cat_lifespan)
 
-conn.commit()
-conn.close()
+        cur.execute("""
+            INSERT OR IGNORE INTO catinfo 
+            (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, 
+            cat_health_issues, cat_child_friendly, cat_intelligence)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id,
+             cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
+        )
+
+def main():
+    catlist = fetch_cat_data(API_KEY)
+    conn, cur = setup_database()
+    insert_cat_data(catlist, cur)
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    main()

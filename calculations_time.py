@@ -1,278 +1,186 @@
 import sqlite3
 import csv
 
-def get_data_from_table_as_dict(table_name):
-    conn = sqlite3.connect("petfinder_pets.db")
-    conn.row_factory = sqlite3.Row  # to access columns by name
-    c = conn.cursor()
-    c.execute(f"SELECT * FROM {table_name}")
-    rows = c.fetchall()
+# ---------------------- DATABASE UTILS ----------------------
+
+def get_data_from_table_as_dict(table_name, db="petfinder_pets.db"):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM {table_name}")
+    rows = cursor.fetchall()
+    conn.close()
     return [dict(row) for row in rows]
 
+# ---------------------- DATA PROCESSING ----------------------
 
-# separate petfinder pets into catlist and doglist 
-catlist = []
-doglist = []
-pfinderdata = get_data_from_table_as_dict("petfinder_pets")
-specieslist = get_data_from_table_as_dict("petfinder_species")
+def split_animals_by_species(pfinder_data, species_data):
+    speciesdict = {item["id"]: item["specie"] for item in species_data}
+    catlist, doglist = [], []
+    for pet in pfinder_data:
+        species_name = speciesdict.get(pet["species"], "Unknown").lower()
+        if species_name == "cat":
+            catlist.append(pet)
+        elif species_name == "dog":
+            doglist.append(pet)
+    return catlist, doglist
 
-speciesdict = {}
-for item in specieslist:
-    speciesdict[item["id"]] = item ["specie"]
+def enrich_with_breed_names(petlist, breeds_data):
+    breeddict = {b["id"]: b["breed"] for b in breeds_data}
+    for pet in petlist:
+        pet["breed_name"] = breeddict.get(pet.get("breed"), "Unknown")
+    return petlist
 
-for pet in pfinderdata:
-    petspeciesid = pet["species"]
-    petspeciesname = speciesdict.get(petspeciesid, "Unknown")
-    if petspeciesname.lower() == "cat":
-        catlist.append(pet)
-    if petspeciesname.lower() == "dog":
-        doglist.append(pet)
+def standardize_dog_breeds(doglist):
+    replacements = {
+        "Pit Bull Terrier": "American Pit Bull Terrier",
+        "English Bulldog": "Olde English Bulldogge",
+        "Bulldog": "Olde English Bulldogge",
+        "Shar-Pei": "Chinese Shar-Pei",
+        "Hound": "Basset Hound",
+        "Cattle Dog": "Australian Cattle Dog",
+        "Husky": "Siberian Husky",
+        "Australian Cattle Dog / Blue Heeler": "Australian Cattle Dog",
+        "Schnauzer": "Giant Schnauzer",
+        "Collie": "Border Collie",
+    }
+    for dog in doglist:
+        name = dog["breed_name"]
+        if "Labrador Retriever" in name:
+            dog["breed_name"] = "Labrador Retriever"
+        elif "German Shepherd" in name:
+            dog["breed_name"] = "German Shepherd Dog"
+        elif name in replacements:
+            dog["breed_name"] = replacements[name]
+    return doglist
 
+def match_breeds_with_info(petlist, breeddata, breed_key):
+    matched, unmatched = [], []
+    for pet in petlist:
+        breed_name = pet["breed_name"]
+        if any(breed[breed_key] == breed_name for breed in breeddata):
+            matched.append(pet)
+        else:
+            unmatched.append(breed_name)
+    return matched, unmatched
 
-# get breed from the id table for each cat in the catlist, each dog in the doglist
-breedslist = get_data_from_table_as_dict("petfinder_breeds")
+# ---------------------- DOG SCORING ----------------------
 
-breeddict = {b["id"]: b["breed"] for b in breedslist}
-for cat in catlist:
-    breed_id = cat.get("breed")
-    breed_name = breeddict.get(breed_id, "Unknown")
-    cat["breed_name"] = breed_name
-for dog in doglist:
-    breed_id = dog.get("breed")
-    breed_name = breeddict.get(breed_id, "Unknown")
-    dog["breed_name"] = breed_name
-
-# adding breeds manually that don't match
-for dog in doglist:
-    if dog["breed_name"] == "Pit Bull Terrier":
-        dog["breed_name"] = "American Pit Bull Terrier"
-    if dog["breed_name"] == "English Bulldog":
-        dog["breed_name"] = "Olde English Bulldogge"
-    if dog["breed_name"] == "Bulldog":
-        dog["breed_name"] = "Olde English Bulldogge"
-    if dog["breed_name"] == "Shar-Pei":
-        dog["breed_name"] = "Chinese Shar-Pei"
-    if dog["breed_name"] == "Hound":
-        dog["breed_name"] = "Basset Hound"
-    if "Labrador Retriever" in dog["breed_name"]:
-        dog["breed_name"] = "Labrador Retriever"
-    if "German Shepherd" in dog["breed_name"]:
-        dog["breed_name"] = "German Shepherd Dog"
-    if dog["breed_name"] == "Cattle Dog":
-        dog["breed_name"] = "Australian Cattle Dog"
-    if dog["breed_name"] == "Husky":
-        dog["breed_name"] = "Siberian Husky"
-    if dog["breed_name"] == "Australian Cattle Dog / Blue Heeler":
-        dog["breed_name"] = "Australian Cattle Dog"
-    if dog["breed_name"] == "Schnauzer":
-        dog["breed_name"] = "Giant Schnauzer"
-    if dog["breed_name"] == "Collie":
-        dog["breed_name"] = "Border Collie"
-
-    
-# makes a list of all the dogs that we have the breeds for in doginfo
-dogs_with_breed_data = []
-dogs_no_breed_data = []
-dogbreeddata = get_data_from_table_as_dict("doginfo")
-for dog in doglist:
-    dogbreed = dog["breed_name"]
-    found = False
+def calculate_nice_dog_scores(dogbreeddata):
+    nicedogs = {}
     for breed in dogbreeddata:
-        if breed["dog_breedname"] == dogbreed:
-            dogs_with_breed_data.append(dog)
-            found = True
-            break
-    if not found:
-        dogs_no_breed_data.append(dogbreed)
-#print(dogs_with_breed_data)
+        temperament = breed.get("dog_temperament", "")
+        temperament = temperament.split(", ") if temperament else []
+        score = sum([
+            temperament.count("Gentle") * 2,
+            temperament.count("Calm") * 2,
+            temperament.count("Friendly"),
+            temperament.count("Trainable"),
+            temperament.count("Patient"),
+            temperament.count("Sociable")
+        ])
+        nicedogs[breed["dog_breedname"]] = round((score / 5) * 100)
+    return nicedogs
 
-# finding what the most common breed is
-breed_counts = {}
-for dog in dogs_with_breed_data:
-    breed = dog["breed_name"]
-    if breed in breed_counts:
-        breed_counts[breed] += 1
-    else:
-        breed_counts[breed] = 1
-most_common_breed = None
-highest_breed_count = 0
-for breed, count in breed_counts.items():
-    if count > highest_breed_count:
-        most_common_breed = breed
-        highest_breed_count = count
+def calculate_petfinder_dog_scores(dogs_with_breed_data):
+    scores = {}
+    counts = {}
+    for dog in dogs_with_breed_data:
+        breed = dog["breed_name"]
+        score = dog["good_with_children"]
+        scores.setdefault(breed, []).append(score)
+    normalized_scores = {}
+    raw_averages = {k: sum(v)/len(v) for k, v in scores.items()}
+    min_score, max_score = min(raw_averages.values()), max(raw_averages.values())
+    for breed, avg in raw_averages.items():
+        normalized = 0 if max_score == min_score else (avg - min_score) / (max_score - min_score)
+        normalized_scores[breed] = round(normalized * 100)
+        counts[breed] = len(scores[breed])
+    return normalized_scores, counts
 
-sorted_breeddict = sorted(breed_counts.items(), key=lambda item: item[1], reverse=True)
-# most common breeds of dogs: 
-# print(sorted_breeddict)
+def write_dog_scores_to_csv(filename, pf_scores, api_scores, counts):
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=["breed", "pfscore", "apiscore", "datapoints"])
+        writer.writeheader()
+        for breed in pf_scores:
+            if breed in api_scores:
+                writer.writerow({
+                    "breed": breed,
+                    "pfscore": pf_scores[breed],
+                    "apiscore": api_scores[breed],
+                    "datapoints": counts.get(breed, 0)
+                })
 
+# ---------------------- CAT SCORING ----------------------
 
-
-# time to work with the temperaments!
-
-
-########### nicedogs is a dictionary of scores (0-100 scale) describing how
-########### nice breeds in the dog api are.  
-nicedogs = {}
-for breed in dogbreeddata:
-    breedname = breed["dog_breedname"]
-    temperament = breed["dog_temperament"]
-    if temperament is not None:
-        temperament = temperament.split(", ")
-        niceness = 0
-        if "Gentle" in temperament:
-            niceness += 2
-        if "Calm" in temperament:
-            niceness += 2
-        if "Friendly" in temperament:
-            niceness += 1
-        if "Trainable" in temperament:
-            niceness += 1
-        if "Patient" in temperament:
-            niceness += 1
-        if "Sociable" in temperament:
-            niceness += 1
-        nicescore = niceness / 5
-        nicedogs[breedname] = round(nicescore * 100)
-#print(nicedogs)
-
-
-
-########### nicepetfinderdogs is a dictionary of scores (0-100 scale) describing
-########### how child friendly breeds in petfinder are.   
-nicepetfinderdogs = {}
-petfinderscores = {}
-for dog in dogs_with_breed_data:
-    dogbreed = (dog["breed_name"])
-    nicescore = (dog["good_with_children"])
-    if dogbreed not in nicepetfinderdogs:
-        nicepetfinderdogs[dogbreed] = (nicescore,)
-    if dogbreed in nicepetfinderdogs:
-        nicepetfinderdogs[dogbreed] += (nicescore,)
-for name, scorelist in nicepetfinderdogs.items():
-    listlength = (len(scorelist))
-    listsum = (sum(scorelist))
-    dogbreedscore = listsum / listlength
-    #print(name, dogbreedscore)
-    petfinderscores[name] = dogbreedscore
-
-min_score = min(petfinderscores.values())
-max_score = max(petfinderscores.values())
-
-for breed, score in petfinderscores.items():
-    if max_score - min_score == 0:
-        petfinderscores[breed] = 0
-    else:
-        normalized = (score - min_score) / (max_score - min_score)
-        petfinderscores[breed] = round(normalized * 100)
-#print(petfinderscores)
-
-'''
-# comparing the two!! 
-for realdog, pfscore in petfinderscores.items():
-    for datadog, apiscore in nicedogs.items(): 
-        if realdog == datadog:
-            print(f"dog: {realdog}")
-            print(f"petfinder score: {pfscore}")
-            print(f"dog api score: {apiscore}")
-'''
-
-# writing the csv
-with open("dog_scores.csv", "w", newline="") as csvfile:
-    fieldnames = ["breed", "pfscore", "apiscore"]
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-    writer.writeheader()
-    for breed in petfinderscores:
-        if breed in nicedogs:
-            writer.writerow({
-                "breed": breed,
-                "pfscore": petfinderscores[breed],
-                "apiscore": nicedogs[breed]
-            })
-
-
-
-
-
-# okayyyy now it's cat time
-
-# makes a list of all the cats that we have the breeds for in catinfo
-cats_with_breed_data = []
-cats_no_breed_data = []
-catbreeddata = get_data_from_table_as_dict("catinfo")
-for cat in catlist:
-    catbreed = cat["breed_name"]
-    found = False
+def calculate_cat_maintenance_scores(catbreeddata):
+    scores = {}
     for breed in catbreeddata:
-        if breed["cat_breedname"] == catbreed:
-            cats_with_breed_data.append(cat)
-            found = True
-            break
-    if not found:
-        cats_no_breed_data.append(catbreed)
+        name = breed["cat_breedname"]
+        shedding = breed["cat_shedding_level"]
+        health = breed["cat_health_issues"]
+        if shedding and health:
+            score = (
+                (1 if shedding <= 2 else 2 if shedding == 3 else 3 if shedding == 4 else 4) +
+                (1 if health <= 2 else 2 if health == 3 else 3)
+            )
+            scores[name] = round((score / 5) * 100)
+    return scores
 
-maintenancecats = {}
-for breed in catbreeddata:
-    catbreedname = breed["cat_breedname"]
-    shedding_level = breed["cat_shedding_level"]
-    health_issues = breed["cat_health_issues"]
-    if health_issues != 0 and shedding_level != 0:
-        maintenance = 0
-        if shedding_level <= 2:
-            maintenance += 1
-        if shedding_level == 3:
-            maintenance += 2
-        if shedding_level == 4:
-            maintenance += 3
-        if shedding_level == 5:
-            maintenance += 4
-        if health_issues <= 2:
-            maintenance += 1
-        if health_issues == 3:
-            maintenance += 2
-        if health_issues == 4:
-            maintenance += 3
-        maintenancescore = maintenance / 5
-        maintenancecats[catbreedname] = round(maintenancescore * 100)
+def calculate_petfinder_cat_scores(cats_with_breed_data):
+    scores = {}
+    for cat in cats_with_breed_data:
+        breed = cat["breed_name"]
+        score = cat["house_trained"]
+        scores.setdefault(breed, []).append(score)
+    averages = {k: sum(v)/len(v) for k, v in scores.items()}
+    min_score, max_score = min(averages.values()), max(averages.values())
+    normalized = {}
+    for breed, avg in averages.items():
+        normalized[breed] = 0 if max_score == min_score else round(((avg - min_score) / (max_score - min_score)) * 100)
+    return normalized
 
-#print(maintenancecats)
+def write_cat_scores_to_csv(filename, pf_scores, api_scores):
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=["breed", "pfscore", "apiscore"])
+        writer.writeheader()
+        for breed in pf_scores:
+            if breed in api_scores:
+                writer.writerow({
+                    "breed": breed,
+                    "pfscore": pf_scores[breed],
+                    "apiscore": api_scores[breed]
+                })
 
-maintenancepetfindercats = {}
-catpetfinderscores = {}
-for cat in cats_with_breed_data:
-    catbreed = (cat["breed_name"])
-    maintenancescore = (cat["house_trained"])
-    if catbreed not in maintenancepetfindercats:
-        maintenancepetfindercats[catbreed] = (maintenancescore,)
-    if catbreed in maintenancepetfindercats:
-        maintenancepetfindercats[catbreed] += (maintenancescore,)
-for name, scorelist in maintenancepetfindercats.items():
-    listlength = (len(scorelist))
-    listsum = (sum(scorelist))
-    catbreedscore = listsum / listlength
-    catpetfinderscores[name] = catbreedscore
+# ---------------------- MAIN FUNCTION ----------------------
 
-min_score = min(catpetfinderscores.values())
-max_score = max(catpetfinderscores.values())
+def main():
+    # Load data
+    pfinder_data = get_data_from_table_as_dict("petfinder_pets")
+    species_data = get_data_from_table_as_dict("petfinder_species")
+    breed_data = get_data_from_table_as_dict("petfinder_breeds")
+    doginfo = get_data_from_table_as_dict("doginfo")
+    catinfo = get_data_from_table_as_dict("catinfo")
 
-for breed, score in catpetfinderscores.items():
-    if max_score - min_score == 0:
-        catpetfinderscores[breed] = 0
-    else:
-        normalized = (score - min_score) / (max_score - min_score)
-        catpetfinderscores[breed] = round(normalized * 100)
+    # Split and enrich data
+    catlist, doglist = split_animals_by_species(pfinder_data, species_data)
+    catlist = enrich_with_breed_names(catlist, breed_data)
+    doglist = enrich_with_breed_names(doglist, breed_data)
+    doglist = standardize_dog_breeds(doglist)
 
-#print(catpetfinderscores)
-# writing the csv
-with open("cat_scores.csv", "w", newline="") as csvfile:
-    fieldnames = ["breed", "pfscore", "apiscore"]
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    # Dog scoring
+    dogs_with_breed_data, _ = match_breeds_with_info(doglist, doginfo, "dog_breedname")
+    nicedogs = calculate_nice_dog_scores(doginfo)
+    pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
+    write_dog_scores_to_csv("dog_scores.csv", pf_dog_scores, nicedogs, dog_counts)
 
-    writer.writeheader()
-    for breed in catpetfinderscores:
-        if breed in maintenancecats:
-            writer.writerow({
-                "breed": breed,
-                "pfscore": catpetfinderscores[breed],
-                "apiscore": maintenancecats[breed]
-            })
+    # Cat scoring
+    cats_with_breed_data, _ = match_breeds_with_info(catlist, catinfo, "cat_breedname")
+    maintenancecats = calculate_cat_maintenance_scores(catinfo)
+    pf_cat_scores = calculate_petfinder_cat_scores(cats_with_breed_data)
+    write_cat_scores_to_csv("cat_scores.csv", pf_cat_scores, maintenancecats)
+
+# ---------------------- RUN SCRIPT ----------------------
+
+if __name__ == "__main__":
+    main()
