@@ -39,7 +39,7 @@ def get_next_batch(data, current_index, batch_size=25):
 
 def setup_database():
     path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(path + "/" + "petfinder_test.db")
+    conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
     cur = conn.cursor()
 
     cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
