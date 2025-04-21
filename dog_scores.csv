@@ -1,48 +1,48 @@
-breed,pfscore,apiscore
-Golden Retriever,44,20
-Beauceron,0,60
-American Pit Bull Terrier,8,20
-Olde English Bulldogge,42,20
-Labrador Retriever,31,40
-German Shepherd Dog,17,0
-Boxer,42,60
-Great Pyrenees,33,60
-Border Collie,17,0
-Chinese Shar-Pei,50,0
-French Bulldog,25,40
-Boerboel,0,0
-Great Dane,25,60
-American Bully,20,20
-Basset Hound,8,60
-Pekingese,0,0
-Border Terrier,50,0
-Australian Shepherd,12,0
-Beagle,12,40
-Pug,17,20
-American Staffordshire Terrier,7,20
-Australian Cattle Dog,33,0
-Basenji,0,0
-American Bulldog,0,60
-Cocker Spaniel,0,40
-Siberian Husky,25,60
-Yorkshire Terrier,17,0
-Rottweiler,30,40
-Giant Schnauzer,0,0
-American Foxhound,0,0
-Rat Terrier,50,0
-Maltese,0,40
-Cane Corso,0,60
-Italian Greyhound,50,0
-Cardigan Welsh Corgi,0,0
-Australian Kelpie,0,20
-Norwich Terrier,100,0
-German Pinscher,50,0
-Cavalier King Charles Spaniel,50,40
-Alaskan Malamute,0,20
-Tibetan Spaniel,0,0
-Silky Terrier,0,20
-Shih Tzu,33,60
-Black and Tan Coonhound,0,40
-Bernese Mountain Dog,0,0
-Catahoula Leopard Dog,25,40
-Doberman Pinscher,0,0
+breed,pfscore,apiscore,datapoints
+Golden Retriever,43,20,7
+Beauceron,0,60,1
+American Pit Bull Terrier,8,20,36
+Olde English Bulldogge,40,20,5
+Labrador Retriever,30,40,28
+German Shepherd Dog,15,0,17
+Boxer,41,60,11
+Great Pyrenees,30,60,5
+Border Collie,12,0,8
+Chinese Shar-Pei,50,0,1
+French Bulldog,17,40,3
+Boerboel,0,0,1
+Great Dane,33,60,3
+American Bully,25,20,4
+Basset Hound,10,60,5
+Pekingese,0,0,1
+Border Terrier,50,0,2
+Australian Shepherd,14,0,7
+Beagle,14,40,7
+Pug,19,20,8
+American Staffordshire Terrier,8,20,6
+Australian Cattle Dog,27,0,11
+Basenji,0,0,1
+American Bulldog,0,60,1
+Cocker Spaniel,0,40,1
+Siberian Husky,27,60,13
+Yorkshire Terrier,25,0,2
+Rottweiler,25,40,4
+Giant Schnauzer,0,0,2
+American Foxhound,0,0,1
+Rat Terrier,50,0,3
+Maltese,0,40,2
+Cane Corso,0,60,1
+Italian Greyhound,50,0,1
+Cardigan Welsh Corgi,0,0,1
+Australian Kelpie,0,20,1
+Norwich Terrier,100,0,1
+German Pinscher,50,0,1
+Cavalier King Charles Spaniel,50,40,1
+Alaskan Malamute,0,20,1
+Tibetan Spaniel,0,0,2
+Silky Terrier,0,20,1
+Shih Tzu,25,60,2
+Black and Tan Coonhound,0,40,1
+Bernese Mountain Dog,0,0,1
+Catahoula Leopard Dog,33,40,3
+Doberman Pinscher,0,0,2

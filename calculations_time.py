@@ -133,28 +133,26 @@ for breed in dogbreeddata:
             niceness += 1
         nicescore = niceness / 5
         nicedogs[breedname] = round(nicescore * 100)
-#print(nicedogs)
 
-
-
-########### nicepetfinderdogs is a dictionary of scores (0-100 scale) describing
-########### how child friendly breeds in petfinder are.   
+# Scores from Petfinder data
 nicepetfinderdogs = {}
 petfinderscores = {}
-for dog in dogs_with_breed_data:
-    dogbreed = (dog["breed_name"])
-    nicescore = (dog["good_with_children"])
-    if dogbreed not in nicepetfinderdogs:
-        nicepetfinderdogs[dogbreed] = (nicescore,)
-    if dogbreed in nicepetfinderdogs:
-        nicepetfinderdogs[dogbreed] += (nicescore,)
-for name, scorelist in nicepetfinderdogs.items():
-    listlength = (len(scorelist))
-    listsum = (sum(scorelist))
-    dogbreedscore = listsum / listlength
-    #print(name, dogbreedscore)
-    petfinderscores[name] = dogbreedscore
+petfinder_counts = {} 
 
+for dog in dogs_with_breed_data:
+    dogbreed = dog["breed_name"]
+    nicescore = dog["good_with_children"]
+    if dogbreed not in nicepetfinderdogs:
+        nicepetfinderdogs[dogbreed] = [nicescore]
+    else:
+        nicepetfinderdogs[dogbreed].append(nicescore)
+
+for breed, scorelist in nicepetfinderdogs.items():
+    petfinder_counts[breed] = len(scorelist) 
+    avg_score = sum(scorelist) / len(scorelist)
+    petfinderscores[breed] = avg_score
+
+# Normalize scores
 min_score = min(petfinderscores.values())
 max_score = max(petfinderscores.values())
 
@@ -164,21 +162,10 @@ for breed, score in petfinderscores.items():
     else:
         normalized = (score - min_score) / (max_score - min_score)
         petfinderscores[breed] = round(normalized * 100)
-#print(petfinderscores)
 
-'''
-# comparing the two!! 
-for realdog, pfscore in petfinderscores.items():
-    for datadog, apiscore in nicedogs.items(): 
-        if realdog == datadog:
-            print(f"dog: {realdog}")
-            print(f"petfinder score: {pfscore}")
-            print(f"dog api score: {apiscore}")
-'''
-
-# writing the csv
+# Write to CSV
 with open("dog_scores.csv", "w", newline="") as csvfile:
-    fieldnames = ["breed", "pfscore", "apiscore"]
+    fieldnames = ["breed", "pfscore", "apiscore", "datapoints"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
     writer.writeheader()
@@ -187,7 +174,8 @@ with open("dog_scores.csv", "w", newline="") as csvfile:
             writer.writerow({
                 "breed": breed,
                 "pfscore": petfinderscores[breed],
-                "apiscore": nicedogs[breed]
+                "apiscore": nicedogs[breed],
+                "datapoints": petfinder_counts.get(breed, 0)
             })
 
 

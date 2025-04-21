@@ -65,11 +65,8 @@ CREATE TABLE IF NOT EXISTS catinfo (
     cat_intelligence INTEGER,
     FOREIGN KEY (cat_origin_id) REFERENCES cat_origins(id),
     FOREIGN KEY (cat_lifespan_id) REFERENCES cat_lifespans(id)
-<<<<<<< HEAD
 
 
-=======
->>>>>>> 0a4d62c0e27bd667a4dbb3e7940e0c46c5b7864a
 )
 """)
 
@@ -95,15 +92,9 @@ for cat in catlist:
 
     cur.execute("""
         INSERT OR IGNORE INTO catinfo 
-<<<<<<< HEAD
         (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
         VALUES (?, ?, ?, ?, ?, ?, ?)""",
         (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_intelligence)
-=======
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (cat_breedname, cat_temperament, cat_origin_id, cat_lifespan_id, cat_shedding_level, cat_health_issues, cat_child_friendly, cat_intelligence)
->>>>>>> 0a4d62c0e27bd667a4dbb3e7940e0c46c5b7864a
     )
 
 conn.commit()
