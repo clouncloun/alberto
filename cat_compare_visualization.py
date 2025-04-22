@@ -17,7 +17,7 @@ print(breeds)
 print(pf_scores)
 print(api_scores)
 
-'''
+
 
 # Create the plot
 x = range(len(breeds))  # x-axis positions
@@ -44,4 +44,3 @@ ax.legend()
 # Show the plot
 plt.tight_layout()
 plt.show()
-'''
