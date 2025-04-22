@@ -105,9 +105,6 @@ def calculate_nice_dog_scores(dogbreeddata):
 def calculate_petfinder_dog_scores(dogs_with_breed_data):
     scores = {}
     counts = {}
-    # if not scores:
-    #     print("Warning: No cat scores to calculate.")
-    #     return {}, {}
     for dog in dogs_with_breed_data:
         breed = dog["breed_name"]
         score = dog["good_with_children"]
@@ -152,9 +149,6 @@ def calculate_cat_maintenance_scores(catbreeddata):
 
 def calculate_petfinder_cat_scores(cats_with_breed_data):
     scores = {}
-    if not scores:
-        print("Warning: No cat scores to calculate.")
-        return {}, {}
     for cat in cats_with_breed_data:
         breed = cat["breed_name"]
         score = cat["house_trained"]
