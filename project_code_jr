@@ -31,6 +31,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Call API to get information'''
     key = KEY
     secret = SECRET
+    
     url = "https://api.petfinder.com/v2/oauth2/token"
 
     response = requests.post(url, data={
@@ -340,7 +341,7 @@ def write_file_states(filename, data):
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(prepped_data)
-
+'''
 def main():
     getters = set_up_database('petfinder_pets.db')
     set_up_database('petfinder_pets.db')
@@ -352,6 +353,14 @@ def main():
     ages = age_most_common(getters[0])
     #states_dict = dict(states)
     #fig, ax = create_map_visualization(plt, gpd, pd, sns, states_dict)
+    plt.show()
+'''
+def main():
+    cur, conn = set_up_database('petfinder_pets.db')
+    get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', cur, conn)
+    states = state_w_most_pets(cur)
+    write_file_states('petfinder_states.csv', states)
+    ages = age_most_common(cur)
     plt.show()
 
 if __name__ == "__main__":

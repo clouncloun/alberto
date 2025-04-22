@@ -33,6 +33,7 @@ def split_animals_by_species(pfinder_data, species_data):
     speciesdict = {item["id"]: item["specie"] for item in species_data}
     catlist, doglist = [], []
     for pet in pfinder_data:
+        #print(pfinder_data)
         species_name = speciesdict.get(pet["species"], "Unknown").lower()
         if species_name == "cat":
             catlist.append(pet)
@@ -100,6 +101,9 @@ def calculate_nice_dog_scores(dogbreeddata):
 def calculate_petfinder_dog_scores(dogs_with_breed_data):
     scores = {}
     counts = {}
+    if not scores:
+        print("Warning: No cat scores to calculate.")
+        return {}, {}
     for dog in dogs_with_breed_data:
         breed = dog["breed_name"]
         score = dog["good_with_children"]
@@ -144,6 +148,9 @@ def calculate_cat_maintenance_scores(catbreeddata):
 
 def calculate_petfinder_cat_scores(cats_with_breed_data):
     scores = {}
+    if not scores:
+        print("Warning: No cat scores to calculate.")
+        return {}, {}
     for cat in cats_with_breed_data:
         breed = cat["breed_name"]
         score = cat["house_trained"]
@@ -170,7 +177,7 @@ def write_cat_scores_to_csv(filename, pf_scores, api_scores):
 # ---------------------- MAIN FUNCTION ----------------------
 def main():
     # Load Petfinder data
-    pfinder_data = get_data_from_table_as_dict("catinfo")
+    pfinder_data = get_data_from_table_as_dict("petfinder_pets")    
     species_data = get_data_from_table_as_dict("petfinder_species")
     breed_data = get_data_from_table_as_dict("petfinder_breeds")
 
@@ -182,10 +189,16 @@ def main():
     catlist, doglist = split_animals_by_species(pfinder_data, species_data)
     catlist = enrich_with_breed_names(catlist, breed_data)
     doglist = enrich_with_breed_names(doglist, breed_data)
+    #print("Sample dog with breed name:", doglist[0] if doglist else "No dogs")
     doglist = standardize_dog_breeds(doglist)
+    #print("Number of dogs after species split:", len(doglist))
+    #print("Standardized breed names:", [d["breed_name"] for d in doglist[:5]])
 
     # Dog scoring
+    #print("Doginfo breeds:", sorted(set(b["dog_breedname"] for b in dogbreeddata)))
+    #print("Doglist breeds:", sorted(set(d["breed_name"] for d in doglist)))
     dogs_with_breed_data, _ = match_breeds_with_info(doglist, dogbreeddata, "dog_breedname")
+    #print("dogs_with_breed_data sample:", dogs_with_breed_data[:2])
     nicedogs = calculate_nice_dog_scores(dogbreeddata)
     pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
     write_dog_scores_to_csv("dog_scores.csv", pf_dog_scores, nicedogs, dog_counts)
