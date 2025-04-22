@@ -1,20 +1,2 @@
 breed,pfscore,apiscore,datapoints
-Pug,0,20,1
-Chow Chow,0,0,1
-Australian Shepherd,0,0,4
-Yorkshire Terrier,0,0,2
-Australian Cattle Dog,0,0,4
-Beagle,0,40,3
-Border Collie,0,0,5
-German Shepherd Dog,0,0,3
-Alaskan Malamute,0,20,1
-Labrador Retriever,0,40,13
-Golden Retriever,0,20,4
-Cocker Spaniel,0,40,1
-Staffordshire Bull Terrier,0,0,10
-Catahoula Leopard Dog,0,40,1
-American Bully,0,20,2
-Great Pyrenees,0,60,6
-Rottweiler,0,40,2
-Siberian Husky,0,60,2
-Giant Schnauzer,0,0,1
+Labrador Retriever,0,40,30
