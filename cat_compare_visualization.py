@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import csv
 
+
 # Read the data from the CSV file
 def read_cat_data(filename="cat_scores.csv"):
     breeds = []
@@ -24,7 +25,7 @@ def read_cat_data(filename="cat_scores.csv"):
 
     return breeds, pf_scores, api_scores
 
-def create_cat_vis(breeds, pf_scores, api_scores):
+def plot_cat_scores(breeds, pf_scores, api_scores):
     if not breeds:
         print("No valid data to plot.")
         return
@@ -56,7 +57,7 @@ def create_cat_vis(breeds, pf_scores, api_scores):
 
 def main():
     breeds, pf_scores, api_scores = read_cat_data()
-    create_cat_vis(breeds, pf_scores, api_scores)
+    plot_cat_scores(breeds, pf_scores, api_scores)
 
 if __name__ == "__main__":
     main()
