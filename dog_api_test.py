@@ -41,7 +41,6 @@ def setup_database():
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(os.path.join(path, "petfinder_pets.db"))
     cur = conn.cursor()
-
     cur.execute("""CREATE TABLE IF NOT EXISTS dog_bred_for (
         id INTEGER PRIMARY KEY, 
         dog_bred_for TEXT UNIQUE
@@ -57,19 +56,25 @@ def setup_database():
         dog_lifespan TEXT UNIQUE
     )""")
 
+    cur.execute("""CREATE TABLE IF NOT EXISTS dog_temperaments (
+    id INTEGER PRIMARY KEY,
+    dog_temperament TEXT UNIQUE
+)""")
+
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS doginfo (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        dog_breedname TEXT,
-        dog_temperament TEXT,
-        dog_bred_for_id INTEGER DEFAULT 0,
-        dog_breed_group_id INTEGER DEFAULT 0,
-        dog_lifespan_id INTEGER DEFAULT 0,
-        FOREIGN KEY (dog_bred_for_id) REFERENCES dog_bred_for(id),
-        FOREIGN KEY (dog_breed_group_id) REFERENCES dog_breed_group(id),
-        FOREIGN KEY (dog_lifespan_id) REFERENCES dog_lifespans(id)
-    )""")
-
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    dog_breedname TEXT,
+    dog_temperament_id INTEGER DEFAULT 0,
+    dog_bred_for_id INTEGER DEFAULT 0,
+    dog_breed_group_id INTEGER DEFAULT 0,
+    dog_lifespan_id INTEGER DEFAULT 0,
+    FOREIGN KEY (dog_temperament_id) REFERENCES dog_temperaments(id),
+    FOREIGN KEY (dog_bred_for_id) REFERENCES dog_bred_for(id),
+    FOREIGN KEY (dog_breed_group_id) REFERENCES dog_breed_group(id),
+    FOREIGN KEY (dog_lifespan_id) REFERENCES dog_lifespans(id)
+)""")
     return conn, cur
 
 def insert_and_get_id(cur, table, column, value):
@@ -84,6 +89,7 @@ def insert_dog_data(doglist, cur):
     for dog in doglist:
         dog_breedname = dog.get('name')
         dog_temperament = dog.get('temperament')
+        dog_temperament_id = insert_and_get_id(cur, 'dog_temperaments', 'dog_temperament', dog_temperament)
         dog_lifespan = dog.get('life_span')
         dog_bred_for = dog.get('bred_for')
         dog_breed_group = dog.get('breed_group')
@@ -93,11 +99,11 @@ def insert_dog_data(doglist, cur):
         dog_breed_group_id = insert_and_get_id(cur, 'dog_breed_group', 'dog_breed_group', dog_breed_group)
 
         cur.execute("""
-            INSERT OR IGNORE INTO doginfo 
-            (dog_breedname, dog_temperament, dog_lifespan_id, dog_bred_for_id, dog_breed_group_id)
-            VALUES (?, ?, ?, ?, ?)""",
-            (dog_breedname, dog_temperament, dog_lifespan_id, dog_bred_for_id, dog_breed_group_id)
-        )
+    INSERT OR IGNORE INTO doginfo 
+    (dog_breedname, dog_temperament_id, dog_lifespan_id, dog_bred_for_id, dog_breed_group_id)
+    VALUES (?, ?, ?, ?, ?)""",
+    (dog_breedname, dog_temperament_id, dog_lifespan_id, dog_bred_for_id, dog_breed_group_id)
+)
 
 def main():
     doglist = fetch_dog_data(API_KEY)
