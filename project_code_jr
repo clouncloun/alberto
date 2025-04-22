@@ -64,6 +64,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
 
     '''Create the main data table with individual animal information'''
 
+    cur.execute("DROP TABLE IF EXISTS petfinder_good_with_children")
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_pets 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
@@ -133,7 +134,8 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Create table to tell us if the animal is good with children'''
     child_list = []
     for animal in collected_animals:
-        child = animal['environment']['children']
+        #print(animal)
+        child = str(animal['environment'].get('children'))  # Convert to string
         if child not in child_list:
             child_list.append(child)
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_good_with_children (id INTEGER PRIMARY KEY, child TEXT)""")
@@ -143,7 +145,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Create the table to tell us if the animal is spayed or not'''
     spay_list = []
     for animal in collected_animals:
-        status = animal['attributes']['spayed_neutered']
+        status = str(animal['attributes']['spayed_neutered'])
         if status not in spay_list:
             spay_list.append(status)
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_spayed_neutered (id INTEGER PRIMARY KEY, status TEXT)""")
@@ -153,7 +155,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
     '''Create a table to tell us if the animal is house trained'''
     house_list = []
     for animal in collected_animals:
-        house = animal['attributes']['house_trained']
+        house = str(animal['attributes']['house_trained'])
         if house not in house_list:
             house_list.append(house)
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_house_trained (id INTEGER PRIMARY KEY, house_trained TEXT)""")
@@ -204,19 +206,20 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         for row in cur:
             if row[1] == pri_size:
                 a_size = row[0]
-        pri_children = animal['environment']['children']
-        cur.execute("""SELECT * FROM petfinder_good_with_children""")
-        a_child = 0
+        pri_children = str(animal['environment'].get('children'))  # Convert to string
+        cur.execute("SELECT id, child FROM petfinder_good_with_children")
+        a_child = 0  # Fallback if not found
         for row in cur:
             if row[1] == pri_children:
                 a_child = row[0]
-        pri_spay = animal['attributes']['spayed_neutered']
+                break
+        pri_spay = str(animal['attributes']['spayed_neutered'])
         cur.execute("""SELECT * FROM petfinder_spayed_neutered""")
         a_spay = 0
         for row in cur:
             if row[1] == pri_spay:
                 a_spay = row[0]
-        pri_house = animal['attributes']['house_trained']
+        pri_house = str(animal['attributes']['house_trained'])
         cur.execute("""SELECT * FROM petfinder_house_trained""")
         a_house = 0
         for row in cur:
