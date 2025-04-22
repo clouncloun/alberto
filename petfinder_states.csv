@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿State,Number of Animals
 OH,6
 IL,3
@@ -10,3 +11,17 @@ SC,1
 MI,1
 OR,1
 MO,1
+=======
+﻿State,Number of Animals
+OR,64
+WA,58
+CA,25
+TX,15
+NY,14
+AL,9
+CT,5
+OH,5
+NJ,3
+MD,1
+NC,1
+>>>>>>> a058225b64806457a7722ad1ef08769223332bb1

@@ -12,12 +12,28 @@ def get_data_from_table_as_dict(table_name, db="petfinder_pets.db"):
     conn.close()
     return [dict(row) for row in rows]
 
+
+def get_doginfo_with_temperament(db="petfinder_pets.db"):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT di.*, dt.dog_temperament
+        FROM doginfo di
+        LEFT JOIN dog_temperaments dt ON di.dog_temperament_id = dt.id
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 # ---------------------- DATA PROCESSING ----------------------
 
 def split_animals_by_species(pfinder_data, species_data):
     speciesdict = {item["id"]: item["specie"] for item in species_data}
     catlist, doglist = [], []
     for pet in pfinder_data:
+        #print(pfinder_data)
         species_name = speciesdict.get(pet["species"], "Unknown").lower()
         if species_name == "cat":
             catlist.append(pet)
@@ -27,7 +43,11 @@ def split_animals_by_species(pfinder_data, species_data):
 
 def enrich_with_breed_names(petlist, breeds_data):
     breeddict = {b["id"]: b["breed"] for b in breeds_data}
+    #for pet in petlist:
+        #pet["breed_name"] = breeddict.get(pet.get("breed"), "Unknown")
     for pet in petlist:
+        if isinstance(pet.get("breed"), dict):
+            print("Invalid breed field (dict):", pet)
         pet["breed_name"] = breeddict.get(pet.get("breed"), "Unknown")
     return petlist
 
@@ -82,6 +102,7 @@ def calculate_nice_dog_scores(dogbreeddata):
         nicedogs[breed["dog_breedname"]] = round((score / 5) * 100)
     return nicedogs
 
+'''
 def calculate_petfinder_dog_scores(dogs_with_breed_data):
     scores = {}
     counts = {}
@@ -98,6 +119,41 @@ def calculate_petfinder_dog_scores(dogs_with_breed_data):
         counts[breed] = len(scores[breed])
     return normalized_scores, counts
 
+
+'''
+def calculate_petfinder_dog_scores(dogs_with_breed_data):
+    scores = {}
+    counts = {}
+
+    for dog in dogs_with_breed_data:
+        breed = dog["breed_name"]
+        score = dog.get("good_with_children")
+
+        if score is None:
+            continue
+        try:
+            score = float(score)
+        except ValueError:
+            continue
+
+        scores.setdefault(breed, []).append(score)
+
+    if not scores:
+        print("[ERROR] No valid PetFinder scores found.")
+        return {}, {}
+
+    raw_averages = {k: sum(v) / len(v) for k, v in scores.items()}
+    min_score, max_score = min(raw_averages.values()), max(raw_averages.values())
+
+    normalized_scores = {}
+    for breed, avg in raw_averages.items():
+        normalized = 0 if max_score == min_score else (avg - min_score) / (max_score - min_score)
+        normalized_scores[breed] = round(normalized * 100)
+        counts[breed] = len(scores[breed])
+
+    return normalized_scores, counts
+
+
 def write_dog_scores_to_csv(filename, pf_scores, api_scores, counts):
     with open(filename, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=["breed", "pfscore", "apiscore", "datapoints"])
@@ -110,7 +166,6 @@ def write_dog_scores_to_csv(filename, pf_scores, api_scores, counts):
                     "apiscore": api_scores[breed],
                     "datapoints": counts.get(breed, 0)
                 })
-
 # ---------------------- CAT SCORING ----------------------
 
 def calculate_cat_maintenance_scores(catbreeddata):
@@ -152,33 +207,44 @@ def write_cat_scores_to_csv(filename, pf_scores, api_scores):
                     "apiscore": api_scores[breed]
                 })
 
-# ---------------------- MAIN FUNCTION ----------------------
 
+# ---------------------- MAIN FUNCTION ----------------------
 def main():
-    # Load data
-    pfinder_data = get_data_from_table_as_dict("petfinder_pets")
+    # Load Petfinder data
+    pfinder_data = get_data_from_table_as_dict("petfinder_pets")   
     species_data = get_data_from_table_as_dict("petfinder_species")
     breed_data = get_data_from_table_as_dict("petfinder_breeds")
-    doginfo = get_data_from_table_as_dict("doginfo")
-    catinfo = get_data_from_table_as_dict("catinfo")
 
-    # Split and enrich data
+    # Load normalized breed data from your own API
+    dogbreeddata = get_doginfo_with_temperament()
+    catinfo = get_data_from_table_as_dict("catinfo")  # cats don't use JOIN yet
+
+    # Split and enrich petfinder data
     catlist, doglist = split_animals_by_species(pfinder_data, species_data)
     catlist = enrich_with_breed_names(catlist, breed_data)
     doglist = enrich_with_breed_names(doglist, breed_data)
+    #print("Sample dog with breed name:", doglist[0] if doglist else "No dogs")
     doglist = standardize_dog_breeds(doglist)
+    #print("Number of dogs after species split:", len(doglist))
+    #print("Standardized breed names:", [d["breed_name"] for d in doglist[:5]])
 
     # Dog scoring
-    dogs_with_breed_data, _ = match_breeds_with_info(doglist, doginfo, "dog_breedname")
-    nicedogs = calculate_nice_dog_scores(doginfo)
+    #print("Doginfo breeds:", sorted(set(b["dog_breedname"] for b in dogbreeddata)))
+    #print("Doglist breeds:", sorted(set(d["breed_name"] for d in doglist)))
+    dogs_with_breed_data, _ = match_breeds_with_info(doglist, dogbreeddata, "dog_breedname")
+    #print(f"[DEBUG] Dogs matched with breed info: {len(dogs_with_breed_data)}")
+    #print("dogs_with_breed_data sample:", dogs_with_breed_data[:2])
+    nicedogs = calculate_nice_dog_scores(dogbreeddata)
     pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
     write_dog_scores_to_csv("dog_scores.csv", pf_dog_scores, nicedogs, dog_counts)
 
+    
     # Cat scoring
     cats_with_breed_data, _ = match_breeds_with_info(catlist, catinfo, "cat_breedname")
     maintenancecats = calculate_cat_maintenance_scores(catinfo)
     pf_cat_scores = calculate_petfinder_cat_scores(cats_with_breed_data)
     write_cat_scores_to_csv("cat_scores.csv", pf_cat_scores, maintenancecats)
+    
 
 # ---------------------- RUN SCRIPT ----------------------
 

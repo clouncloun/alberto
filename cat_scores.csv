@@ -1,8 +1,5 @@
 breed,pfscore,apiscore
-American Shorthair,70,80
-Russian Blue,100,60
-Siamese,40,40
-Maine Coon,100,80
-Snowshoe,0,60
-Bengal,0,80
-Ragdoll,100,80
+Maine Coon,0,80
+Siamese,0,40
+American Shorthair,0,80
+Siberian,0,60
