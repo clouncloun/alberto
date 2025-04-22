@@ -64,7 +64,6 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
 
     '''Create the main data table with individual animal information'''
 
-    cur.execute("DROP TABLE IF EXISTS petfinder_good_with_children")
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_pets 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
@@ -361,7 +360,7 @@ def main():
     plt.show()
 '''
 def main():
-    cur, conn = set_up_database('petfinder_test.db')
+    cur, conn = set_up_database('petfinder_pets.db')
     get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', cur, conn)
     states = state_w_most_pets(cur)
     write_file_states('petfinder_states.csv', states)

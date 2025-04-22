@@ -42,7 +42,6 @@ def setup_database():
     conn = sqlite3.connect(path + "/" + "petfinder_pets.db")
     cur = conn.cursor()
 
-    #cur.execute("""DROP TABLE catinfo""")
     cur.execute("""CREATE TABLE IF NOT EXISTS cat_origins (
         id INTEGER PRIMARY KEY, 
         cat_origin TEXT UNIQUE
