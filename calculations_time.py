@@ -43,7 +43,11 @@ def split_animals_by_species(pfinder_data, species_data):
 
 def enrich_with_breed_names(petlist, breeds_data):
     breeddict = {b["id"]: b["breed"] for b in breeds_data}
+    #for pet in petlist:
+        #pet["breed_name"] = breeddict.get(pet.get("breed"), "Unknown")
     for pet in petlist:
+        if isinstance(pet.get("breed"), dict):
+            print("Invalid breed field (dict):", pet)
         pet["breed_name"] = breeddict.get(pet.get("breed"), "Unknown")
     return petlist
 
@@ -101,9 +105,9 @@ def calculate_nice_dog_scores(dogbreeddata):
 def calculate_petfinder_dog_scores(dogs_with_breed_data):
     scores = {}
     counts = {}
-    if not scores:
-        print("Warning: No cat scores to calculate.")
-        return {}, {}
+    # if not scores:
+    #     print("Warning: No cat scores to calculate.")
+    #     return {}, {}
     for dog in dogs_with_breed_data:
         breed = dog["breed_name"]
         score = dog["good_with_children"]
@@ -174,6 +178,7 @@ def write_cat_scores_to_csv(filename, pf_scores, api_scores):
                     "apiscore": api_scores[breed]
                 })
 
+
 # ---------------------- MAIN FUNCTION ----------------------
 def main():
     # Load Petfinder data
@@ -203,11 +208,13 @@ def main():
     pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
     write_dog_scores_to_csv("dog_scores.csv", pf_dog_scores, nicedogs, dog_counts)
 
+    
     # Cat scoring
     cats_with_breed_data, _ = match_breeds_with_info(catlist, catinfo, "cat_breedname")
     maintenancecats = calculate_cat_maintenance_scores(catinfo)
     pf_cat_scores = calculate_petfinder_cat_scores(cats_with_breed_data)
     write_cat_scores_to_csv("cat_scores.csv", pf_cat_scores, maintenancecats)
+    
 
 # ---------------------- RUN SCRIPT ----------------------
 

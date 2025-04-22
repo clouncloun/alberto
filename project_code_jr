@@ -63,6 +63,7 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
    
 
     '''Create the main data table with individual animal information'''
+
     cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_pets 
         (id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT, 
@@ -94,9 +95,9 @@ def get_petfinder_data(SECRET, KEY, cur, conn):
         breed = animal['breeds']['primary']
         if breed not in breeds_list:
             breeds_list.append(breed)
-    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_breeds (id INTEGER PRIMARY KEY, breed TEXT)""")
-    for i in range(len(breeds_list)):
-        cur.execute("""INSERT OR IGNORE INTO petfinder_breeds (id, breed) VALUES (?,?)""", (i, breeds_list[i]))
+    cur.execute("""CREATE TABLE IF NOT EXISTS petfinder_breeds (id INTEGER PRIMARY KEY AUTOINCREMENT, breed TEXT UNIQUE)""")
+    for breed in breeds_list:
+        cur.execute("""INSERT OR IGNORE INTO petfinder_breeds (breed) VALUES (?)""", (breed,))
     
     '''Creat table for the keys for ages'''
     age_list = []
