@@ -124,34 +124,17 @@ def calculate_petfinder_dog_scores(dogs_with_breed_data):
 def calculate_petfinder_dog_scores(dogs_with_breed_data):
     scores = {}
     counts = {}
+
     for dog in dogs_with_breed_data:
         breed = dog["breed_name"]
         score = dog.get("good_with_children")
-        '''
+
         if score is None:
-            print(f"[WARN] Missing 'good_with_children' for breed {breed}")
             continue
         try:
             score = float(score)
         except ValueError:
-            print(f"[WARN] Invalid score '{score}' for breed {breed}")
             continue
-            '''
-        for dog in dogs_with_breed_data:
-            breed = dog["breed_name"]
-            score = dog.get("good_with_children")
-            
-            # Debug print
-            print(f"[SCORE] {breed}: good_with_children = {score}")
-            
-            if score is None:
-                print(f"[WARN] Missing 'good_with_children' for {breed}")
-                continue
-            try:
-                score = float(score)
-            except ValueError:
-                print(f"[WARN] Invalid score '{score}' for {breed}")
-                continue
 
         scores.setdefault(breed, []).append(score)
 
@@ -159,7 +142,7 @@ def calculate_petfinder_dog_scores(dogs_with_breed_data):
         print("[ERROR] No valid PetFinder scores found.")
         return {}, {}
 
-    raw_averages = {k: sum(v)/len(v) for k, v in scores.items()}
+    raw_averages = {k: sum(v) / len(v) for k, v in scores.items()}
     min_score, max_score = min(raw_averages.values()), max(raw_averages.values())
 
     normalized_scores = {}
@@ -228,7 +211,7 @@ def write_cat_scores_to_csv(filename, pf_scores, api_scores):
 # ---------------------- MAIN FUNCTION ----------------------
 def main():
     # Load Petfinder data
-    pfinder_data = get_data_from_table_as_dict("petfinder_pets")    
+    pfinder_data = get_data_from_table_as_dict("petfinder_pets")   
     species_data = get_data_from_table_as_dict("petfinder_species")
     breed_data = get_data_from_table_as_dict("petfinder_breeds")
 
@@ -249,7 +232,7 @@ def main():
     #print("Doginfo breeds:", sorted(set(b["dog_breedname"] for b in dogbreeddata)))
     #print("Doglist breeds:", sorted(set(d["breed_name"] for d in doglist)))
     dogs_with_breed_data, _ = match_breeds_with_info(doglist, dogbreeddata, "dog_breedname")
-    print(f"[DEBUG] Dogs matched with breed info: {len(dogs_with_breed_data)}")
+    #print(f"[DEBUG] Dogs matched with breed info: {len(dogs_with_breed_data)}")
     #print("dogs_with_breed_data sample:", dogs_with_breed_data[:2])
     nicedogs = calculate_nice_dog_scores(dogbreeddata)
     pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
