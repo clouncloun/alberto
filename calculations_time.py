@@ -12,6 +12,21 @@ def get_data_from_table_as_dict(table_name, db="petfinder_pets.db"):
     conn.close()
     return [dict(row) for row in rows]
 
+
+def get_doginfo_with_temperament(db="petfinder_pets.db"):
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT di.*, dt.dog_temperament
+        FROM doginfo di
+        LEFT JOIN dog_temperaments dt ON di.dog_temperament_id = dt.id
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 # ---------------------- DATA PROCESSING ----------------------
 
 def split_animals_by_species(pfinder_data, species_data):
@@ -153,24 +168,25 @@ def write_cat_scores_to_csv(filename, pf_scores, api_scores):
                 })
 
 # ---------------------- MAIN FUNCTION ----------------------
-
 def main():
-    # Load data
-    pfinder_data = get_data_from_table_as_dict("petfinder_pets")
+    # Load Petfinder data
+    pfinder_data = get_data_from_table_as_dict("catinfo")
     species_data = get_data_from_table_as_dict("petfinder_species")
     breed_data = get_data_from_table_as_dict("petfinder_breeds")
-    doginfo = get_data_from_table_as_dict("doginfo")
-    catinfo = get_data_from_table_as_dict("catinfo")
 
-    # Split and enrich data
+    # Load normalized breed data from your own API
+    dogbreeddata = get_doginfo_with_temperament()
+    catinfo = get_data_from_table_as_dict("catinfo")  # cats don't use JOIN yet
+
+    # Split and enrich petfinder data
     catlist, doglist = split_animals_by_species(pfinder_data, species_data)
     catlist = enrich_with_breed_names(catlist, breed_data)
     doglist = enrich_with_breed_names(doglist, breed_data)
     doglist = standardize_dog_breeds(doglist)
 
     # Dog scoring
-    dogs_with_breed_data, _ = match_breeds_with_info(doglist, doginfo, "dog_breedname")
-    nicedogs = calculate_nice_dog_scores(doginfo)
+    dogs_with_breed_data, _ = match_breeds_with_info(doglist, dogbreeddata, "dog_breedname")
+    nicedogs = calculate_nice_dog_scores(dogbreeddata)
     pf_dog_scores, dog_counts = calculate_petfinder_dog_scores(dogs_with_breed_data)
     write_dog_scores_to_csv("dog_scores.csv", pf_dog_scores, nicedogs, dog_counts)
 
