@@ -283,60 +283,60 @@ def set_up_database(db_name):
     cur = conn.cursor()
     return cur, conn
 
-# '''Create a map visualization of pets'''
-# def create_map_visualization(plt, gpd, pd, sns, data):
-#     '''Read in geological data from Geopandas in order to make visualization'''
-#     us_states = gpd.read_file('ne_110m_admin_1_states_provinces.shp')
+'''Create a map visualization of pets'''
+def create_map_visualization(plt, gpd, pd, sns, data):
+    '''Read in geological data from Geopandas in order to make visualization'''
+    us_states = gpd.read_file('ne_110m_admin_1_states_provinces.shp')
 
-#     '''Limit our map to the US'''
-#     us_states = us_states[us_states['admin'] == 'United States of America']
+    '''Limit our map to the US'''
+    us_states = us_states[us_states['admin'] == 'United States of America']
     
-#     '''Set style for the map using the Seaborn package'''
-#     sns.set_theme(style='whitegrid')
+    '''Set style for the map using the Seaborn package'''
+    sns.set_theme(style='whitegrid')
 
-#     '''Create abbreviations to use in the visualization'''
-#     full_name_st = {'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-#                      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': "Illinois", 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-#                      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-#                      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-#                      'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-#                      'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'}
+    '''Create abbreviations to use in the visualization'''
+    full_name_st = {'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+                      'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': "Illinois", 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+                      'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+                      'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+                     'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                     'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'}
     
-#     '''Convert the data into a datafram so that it can be used for the map'''
-#     st_abbreviation = {v: k for k, v in full_name_st.items()}
-#     pet_data = pd.DataFrame.from_dict(data, orient='index', columns=['pet_count'])
-#     pet_data.index.name = 'state_abbr'
-#     pet_data.reset_index(inplace=True)
-#     pet_data['state_name'] = pet_data['state_abbr'].map(full_name_st)
+    '''Convert the data into a datafram so that it can be used for the map'''
+    st_abbreviation = {v: k for k, v in full_name_st.items()}
+    pet_data = pd.DataFrame.from_dict(data, orient='index', columns=['pet_count'])
+    pet_data.index.name = 'state_abbr'
+    pet_data.reset_index(inplace=True)
+    pet_data['state_name'] = pet_data['state_abbr'].map(full_name_st)
     
-#     '''Merge my data wth the geographical data'''
-#     merged = us_states.set_index('name').join(pet_data.set_index('state_name'))
-#     fig, ax = plt.subplots(figsize=(15, 8), facecolor='#f5f5f5')
+    '''Merge my data wth the geographical data'''
+    merged = us_states.set_index('name').join(pet_data.set_index('state_name'))
+    fig, ax = plt.subplots(figsize=(15, 8), facecolor='#f5f5f5')
     
-#     '''Create the map and make it so there are borders, labels, and a gradient'''
-#     merged.plot(column='pet_count', ax=ax, cmap='YlOrRd', edgecolor='black', linewidth=0.5, legend=True, legend_kwds={'label': "Pet Population", 'shrink': 0.7, 'orientation': 'horizontal', 'pad': 0.02}, missing_kwds={'color': 'lightgrey', 'edgecolor': 'black', 'hatch': '///', 'label': 'No data'})
+    '''Create the map and make it so there are borders, labels, and a gradient'''
+    merged.plot(column='pet_count', ax=ax, cmap='YlOrRd', edgecolor='black', linewidth=0.5, legend=True, legend_kwds={'label': "Pet Population", 'shrink': 0.7, 'orientation': 'horizontal', 'pad': 0.02}, missing_kwds={'color': 'lightgrey', 'edgecolor': 'black', 'hatch': '///', 'label': 'No data'})
     
-#     '''Add a label for every state'''
-#     for idx, row in merged.iterrows():
-#         centroid = row.geometry.centroid
-#         state_abbr = st_abbreviation.get(idx, idx[:2].upper())
-#         ax.text(x=centroid.x, y=centroid.y, s=state_abbr, fontsize=8, ha='center', va='center', color='black', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2'))
+    '''Add a label for every state'''
+    for idx, row in merged.iterrows():
+        centroid = row.geometry.centroid
+        state_abbr = st_abbreviation.get(idx, idx[:2].upper())
+        ax.text(x=centroid.x, y=centroid.y, s=state_abbr, fontsize=8, ha='center', va='center', color='black', bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2'))
         
-#     '''Set visualization title'''
-#     ax.set_title('Pet Population by US State', fontsize=16, pad=20)
-   
-#     '''Set background color'''
-#     ax.set_facecolor('#e0e9f5')
+    '''Set visualization title'''
+    ax.set_title('Pet Population by US State', fontsize=16, pad=20)
+
+    '''Set background color'''
+    ax.set_facecolor('#e0e9f5')
     
-#     '''Add a border around the map'''
-#     for spine in ax.spines.values():
-#         spine.set_visible(True)
-#         spine.set_edgecolor('black')
-#         spine.set_linewidth(2)
-#     ax.axis('off')
-#     plt.figtext(0.5, 0.01, 'Data Source: Natural Earth and PetFinder API | Visualization by Miranda Tess', ha="center", fontsize=9, color='gray')
-#     plt.tight_layout()
-#     return fig, ax
+    '''Add a border around the map'''
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_edgecolor('black')
+        spine.set_linewidth(2)
+        ax.axis('off')
+        plt.figtext(0.5, 0.01, 'Data Source: Natural Earth and PetFinder API | Visualization by Miranda Tess', ha="center", fontsize=9, color='gray')
+        plt.tight_layout()
+        return fig, ax
 
 '''Create a function to write files with our calculations'''
 def write_file_states(filename, data):
@@ -361,11 +361,11 @@ def main():
     plt.show()
 '''
 def main():
-    cur, conn = set_up_database('petfinder_pets.db')
+    cur, conn = set_up_database('petfinder_test.db')
     get_petfinder_data('Be1fLhu25t4eDkpVgsJ8MwIT9ZzKXGG6Lf1tpICQ', 'KpqEFwFyfYCXkQH0XolYnDqqiIzOza95KeWPFEpu5zwflN9f25', cur, conn)
     states = state_w_most_pets(cur)
     write_file_states('petfinder_states.csv', states)
-    ages = age_most_common(cur)
+    #fig, ax = create
     plt.show()
 
 if __name__ == "__main__":
