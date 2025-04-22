@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 import csv
 
-# hi i have geopandas commented out bc it didnt work on my computer - feel free to change it back. thats the only change i made here! -audie
+# hi i have geopandas commented out bc it didnt work on my computer - feel free to change it back. 
 
 '''Get current page number (1 if run for the first time, or stored in a file)'''
 def get_current_page(page_file):
